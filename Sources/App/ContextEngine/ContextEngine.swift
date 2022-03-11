@@ -18,6 +18,7 @@ public struct ContextObservation:Content {
 public class ContextEngine: NSObject {
     
     public static let shared = ContextEngine(app:nil)
+    
     public var vaporApp:Application?
 
     private var currentAppId = ""
@@ -30,6 +31,8 @@ public class ContextEngine: NSObject {
     
     public func probeContext() {
         vaporApp?.logger.info("probing...")
+        
+        // need strategy check here
         currentContextId = Scripts.resultOfScript(for: currentAppId)
         vaporApp?.logger.info("context is \(currentContextId)")
         
@@ -37,11 +40,14 @@ public class ContextEngine: NSObject {
         // after probe see if changed if so notify
         
         if let last = observationHistory.last {
+            
                 let nextToLast = observationHistory[ observationHistory.endIndex - 1]
                 
                 if last.app == nextToLast.app && nextToLast.ctx == last.ctx {
                     notifyClients()
                   
+                }else {
+                    vaporApp?.logger.info("no change")
                 }
         }
     }
