@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.adobe.Photoshop.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

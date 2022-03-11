@@ -1,0 +1,1 @@
+tell application id "com.apple.dt.Xcode"    return the path of the last documentend tell

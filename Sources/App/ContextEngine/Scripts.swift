@@ -16,6 +16,10 @@ class Scripts {
  
     public static func script(for appID:String) -> OSAScript? {
         
+        // shold more explicitly support other scripting langs?
+        // find a way not to rely on .applescript extension shold suffice/
+        
+        // need to get public/context-discovery/scripts/:bundleID.dataset/:bundleID.applescript
         if let d = NSDataAsset(name: appID, bundle:Bundle.main),
           let source = String(data:d.data,encoding: .utf8) {
             return OSAScript(source: source)

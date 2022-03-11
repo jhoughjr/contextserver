@@ -18,4 +18,5 @@ class ClientMonitor {
     static let shared = ClientMonitor()
 
     var contextClients = [ClientConnection]()
+    var commandClients = [ClientConnection]()
 }

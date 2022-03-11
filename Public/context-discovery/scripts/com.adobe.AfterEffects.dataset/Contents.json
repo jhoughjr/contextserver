@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.adobe.AfterEffects.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

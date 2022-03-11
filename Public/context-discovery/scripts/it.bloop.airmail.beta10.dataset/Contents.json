@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "it.bloop.airmail.beta10.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

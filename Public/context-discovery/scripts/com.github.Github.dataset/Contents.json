@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.github.Github.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

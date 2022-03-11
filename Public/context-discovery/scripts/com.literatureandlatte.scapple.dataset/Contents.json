@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.literatureandlatte.scapple.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

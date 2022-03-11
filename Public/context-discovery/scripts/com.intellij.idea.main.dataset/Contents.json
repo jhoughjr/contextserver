@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.intellij.idea.main.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

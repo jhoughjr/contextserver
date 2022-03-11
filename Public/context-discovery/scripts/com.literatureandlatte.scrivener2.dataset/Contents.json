@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.literatureandlatte.scrivener2.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.microsoft.Powerpoint.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

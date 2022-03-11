@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "info.colloquy.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

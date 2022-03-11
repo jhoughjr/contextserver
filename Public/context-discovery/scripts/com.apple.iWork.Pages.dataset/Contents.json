@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.apple.iWork.Pages.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

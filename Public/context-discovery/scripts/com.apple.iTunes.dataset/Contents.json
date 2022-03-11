@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.apple.iTunes.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

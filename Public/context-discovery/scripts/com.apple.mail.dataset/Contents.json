@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "com.apple.mail.applescript",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
