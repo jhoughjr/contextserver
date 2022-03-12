@@ -8,11 +8,28 @@
 import AppKit
 import Vapor
 
+public enum ContextDiscoveryStrategy:String,Content {
+    case script
+    case api
+}
+
+public struct ProbeAttempt:Content {
+    let timestamp:Date
+    let strategy:ContextDiscoveryStrategy
+    let observation:ContextObservation
+}
+
 public struct ContextObservation:Content {
     let app:String
     let ctx:String
-    let timestamp:String
+    let timestamp:Date
     let origin:String
+}
+
+public struct EngineState:Content {
+    let ignoreQueryInBrowserApps:Bool
+    let currentObservation:ContextObservation
+    let history:[ContextObservation]
 }
 
 public class ContextEngine: NSObject {
@@ -23,38 +40,61 @@ public class ContextEngine: NSObject {
 
     private var currentAppId = ""
     private var currentContextId = ""
+    
+    private let encoder = JSONEncoder()
+    
     public var observationHistory = [ContextObservation]()
+    public var probeHistory = [ProbeAttempt]()
+    
+    public func state() -> EngineState {
+        EngineState(ignoreQueryInBrowserApps: false,
+                    currentObservation: currentObservation(),
+                    history: observationHistory)
+    }
     
     public func currentObservation() -> ContextObservation {
-        ContextObservation(app: currentAppId, ctx: currentContextId, timestamp: Date().rfc1123, origin: "")
+        let o = ContextObservation(app: currentAppId,
+                                   ctx: currentContextId,
+                                   timestamp: Date(),
+                                   origin: "")
+        vaporApp?.logger.debug("[ENGINE] observed: \(o)")
+        return o
     }
     
     public func probeContext() {
         vaporApp?.logger.info("probing...")
+
+        let s = strategy(for: currentAppId)
         
-        // need strategy check here
-        currentContextId = Scripts.resultOfScript(for: currentAppId)
-        vaporApp?.logger.info("context is \(currentContextId)")
+        switch s {
+        case .script:
+            currentContextId = Scripts.resultOfScript(for: currentAppId)
+        case .api:
+            vaporApp?.logger.warning("\(s) not implemented for any apps yet.")
+            currentContextId = Scripts.resultOfScript(for: currentAppId)
+        }
         
-        observationHistory.append(currentObservation())
+        let observation = currentObservation()
+        
+        observationHistory.append(observation)
         // after probe see if changed if so notify
+        probeHistory.append(ProbeAttempt(timestamp:Date(), strategy: s, observation: observation))
         
         if let last = observationHistory.last {
             
-                let nextToLast = observationHistory[ observationHistory.endIndex - 1]
-                
-                if last.app == nextToLast.app && nextToLast.ctx == last.ctx {
-                    notifyClients()
-                  
-                }else {
-                    vaporApp?.logger.info("no change")
-                }
+            let nextToLast = observationHistory[ observationHistory.endIndex - 1]
+            
+            if last.app == nextToLast.app && nextToLast.ctx == last.ctx {
+                notifyClients()
+            }else {
+                vaporApp?.logger.info("no change")
+            }
         }
     }
     
     private func notifyClients() {
         for c in ClientMonitor.shared.contextClients {
-            if let coded = try? JSONEncoder().encode(observationHistory.last),
+            if let coded = try? encoder.encode(observationHistory.last),
                let codedString = String(data: coded, encoding: .utf8) {
                 if !c.socket.isClosed {
                     c.socket.send(codedString)
@@ -78,7 +118,7 @@ public class ContextEngine: NSObject {
     }
     
     private var obs:NSKeyValueObservation?
-    
+  
     public func startObservingMenubarOwner() {
         vaporApp?.logger.info("Starting observation for \\.menuBarOwningApplication ...")
         obs = NSWorkspace.shared.observe(\.menuBarOwningApplication,
@@ -91,7 +131,7 @@ public class ContextEngine: NSObject {
             }
         }
     }
-    
+
     public func stopObservingMenubarOwner() {
         obs = nil
     }
@@ -100,5 +140,9 @@ public class ContextEngine: NSObject {
         super.init()
         self.vaporApp = app
         startObservingMenubarOwner()
+    }
+    
+    func strategy(for appID:String) -> ContextDiscoveryStrategy {
+        return .script
     }
 }
