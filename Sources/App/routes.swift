@@ -1,54 +1,40 @@
 import Vapor
 
+func encode<T: Codable>(_ o: T) -> String  {
+    
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .millisecondsSince1970
+    encoder.outputFormatting = [.prettyPrinted]
+    if let encoded = try? encoder.encode(o),
+       let jsonString = String(data: encoded, encoding: .utf8) {
+        return jsonString
+    }else {
+        return "\(o)"
+    }
+}
+
 func routes(_ app: Application) throws {
     
     // RESTish Interface
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted]
-
-    app.get("") { req in
-        return "Welcome."
+   
+    app.get("leaf", "engine") { req in
+        req.view.render("engine", ContextEngine.shared.state())
     }
     
     app.get("engine") { req -> String in
-        let state = ContextEngine.shared.state()
-        if let encoded = try? encoder.encode(state),
-           let jsonString = String(data: encoded, encoding: .utf8) {
-            return jsonString
-        }else {
-            return "\(state)"
-        }
+        encode(ContextEngine.shared.state())
     }
     
     app.get("currentObservation") { req -> String in
-        
-        let current = ContextEngine.shared.currentObservation()
-        if let encoded = try? encoder.encode(current),
-           let jsonString = String(data: encoded, encoding: .utf8) {
-            return jsonString
-        }else {
-            return "\(current)"
-        }
+        encode(ContextEngine.shared.currentObservation())
     }
     
     app.get("probeHistory") { req -> String in
-        let history = ContextEngine.shared.probeHistory
-        if let encoded = try? encoder.encode(history),
-           let jsonString = String(data: encoded, encoding: .utf8) {
-            return jsonString
-        }else {
-            return "\(history)"
-        }
+        encode(ContextEngine.shared.probeHistory)
     }
     
     app.get("observationHistory") { req -> String in
-        let history = ContextEngine.shared.observationHistory
-        if let encoded = try? encoder.encode(history),
-           let jsonString = String(data: encoded, encoding: .utf8) {
-            return jsonString
-        }else {
-            return "\(history)"
-        }
+        encode(ContextEngine.shared.observationHistory)
     }
     
     // Websocket Interface
@@ -61,6 +47,7 @@ func routes(_ app: Application) throws {
             let connection = ClientMonitor.ClientConnection(request: req, socket: ws)
             ClientMonitor.shared.contextClients.append(connection)
         }
+        ws.send( encode(ContextEngine.shared.currentObservation()) )
     }
     
 //    app.webSocket("command") { req, ws in

@@ -8,6 +8,7 @@
 import AppKit
 import Vapor
 
+
 public enum ContextDiscoveryStrategy:String,Content {
     case script
     case api
@@ -20,9 +21,9 @@ public struct ProbeAttempt:Content {
 }
 
 public struct ContextObservation:Content {
+    let timestamp:Date
     let app:String
     let ctx:String
-    let timestamp:Date
     let origin:String
 }
 
@@ -53,9 +54,8 @@ public class ContextEngine: NSObject {
     }
     
     public func currentObservation() -> ContextObservation {
-        let o = ContextObservation(app: currentAppId,
+        let o = ContextObservation(timestamp: Date(), app: currentAppId,
                                    ctx: currentContextId,
-                                   timestamp: Date(),
                                    origin: "")
         vaporApp?.logger.debug("[ENGINE] observed: \(o)")
         return o
@@ -94,13 +94,10 @@ public class ContextEngine: NSObject {
     
     private func notifyClients() {
         for c in ClientMonitor.shared.contextClients {
-            if let coded = try? encoder.encode(observationHistory.last),
-               let codedString = String(data: coded, encoding: .utf8) {
-                if !c.socket.isClosed {
-                    c.socket.send(codedString)
-                }else {
-                   purgeClosedConnections()
-                }
+            if !c.socket.isClosed {
+                c.socket.send(encode(currentObservation()))
+            }else {
+               purgeClosedConnections()
             }
         }
     }

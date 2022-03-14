@@ -1,0 +1,28 @@
+
+<html>
+<head>
+    <title>Context Engine</title>
+</head>
+<body>
+    
+    <h1>Context Engine</h1>
+    <hr>
+    <div id="current_obs">
+        
+    Current:
+    #(currentObservation)
+
+    </div>
+    
+    <div id="history">
+    History:
+    #(history)<br>
+    </div>
+
+    <div id="options">
+    Options:
+        Ignore query string in browser apps - #(ignoreQueryInBrowserApps)
+    </div>
+
+</body>
+</html>
