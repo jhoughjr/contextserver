@@ -1,13 +1,12 @@
-
 #extend("master"):
     #export("content"):
-        <p><h2>Context Engine Status</h2></p>
+        <p><h2>Context Engine History</h2></p>
         <hr>
-        <div id="status" display="none">
-          <pre>#(status)</pre>
+        <div id="history" display="none">
+          <pre>#(history)</pre>
         </div>
         <script>
-            let statusEl = document.getElementById("status");
+            let statusEl = document.getElementById("history");
             let stateObject = JSON.parse(statusEl.innerText);
             let pretty = JSON.stringify(stateObject, null, '\t');
             statusEl.innerHTML = "<pre>" + pretty + "</pre>";

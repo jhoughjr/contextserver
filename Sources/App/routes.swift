@@ -1,4 +1,10 @@
 import Vapor
+import Foundation
+
+struct EnginePageContext:Content {
+    let title:String
+    let engineState:EngineState
+}
 
 func encode<T: Codable>(_ o: T) -> String  {
     
@@ -15,30 +21,48 @@ func encode<T: Codable>(_ o: T) -> String  {
 
 func routes(_ app: Application) throws {
     
-    // RESTish Interface
-   
-    app.get("leaf", "engine") { req in
-        req.view.render("engine", ContextEngine.shared.state())
+    app.get("leaf","engine") { req async throws -> View in
+        let ctx = ContextEngine.shared.state().currentObservation
+        return try await req.view.render("engine", ["title":"Engine Status", "status" : encode(ctx), "date":Date().formatted(date: .complete, time: .complete)])
     }
     
-    app.get("engine") { req -> String in
+    app.get("leaf","history") { req async throws -> View in
+        let ctx = ContextEngine.shared.state().history
+        
+        return try await req.view.render("history", ["title":"Engine History", "history" : encode(ctx), "date":Date().formatted(date: .complete, time: .complete)])
+    }
+    
+    app.get("leaf","settings") { req async throws -> View in
+        let ctx = ContextEngine.shared.engineSettings
+        return try await req.view.render("settings",  ["title":"Engine Settings", "settings" : encode(ctx), "date":Date().formatted(date: .complete, time: .complete)])
+    }
+    
+    // JSON Interface
+    app.get("json","") { req -> String in
+        encode(["routes":["engine",
+                          "currentObservation",
+                          "probeHistory",
+                          "observationHistory"]])
+    }
+    
+    app.get("json","engine") { req -> String in
         encode(ContextEngine.shared.state())
     }
     
-    app.get("currentObservation") { req -> String in
+    app.get("json","currentObservation") { req -> String in
         encode(ContextEngine.shared.currentObservation())
     }
     
-    app.get("probeHistory") { req -> String in
+    app.get("json","probeHistory") { req -> String in
         encode(ContextEngine.shared.probeHistory)
     }
     
-    app.get("observationHistory") { req -> String in
+    app.get("json","observationHistory") { req -> String in
         encode(ContextEngine.shared.observationHistory)
     }
     
     // Websocket Interface
-    app.webSocket("context") { req, ws in
+    app.webSocket("ws","context") { req, ws in
         app.logger.info("\(String(describing: req.remoteAddress)) connected to context channel")
         
         if !ClientMonitor.shared.contextClients.contains(where: { connection in
@@ -50,21 +74,21 @@ func routes(_ app: Application) throws {
         ws.send( encode(ContextEngine.shared.currentObservation()) )
     }
     
-//    app.webSocket("command") { req, ws in
-//
-//        app.logger.info("\(String(describing: req.remoteAddress)) connected to command channel")
-//
-//        // sholdnt do this, as the same address will maybe sub to multiple channels
-//
-//        if !ClientMonitor.shared.commandClients.contains(where: { connection in
-//            return connection.request.remoteAddress == req.remoteAddress
-//        }) {
-//            let connection = ClientMonitor.ClientConnection(request: req, socket: ws)
-//            ClientMonitor.shared.commandClients.append(connection)
-//            ws.onText { ws, string in
-//                CommandProcessor.shared.handleCommand(commandString: string, for: ws)
-//            }
-//            ws.send("Command?")
-//        }
-//    }
+    app.webSocket("ws","command") { req, ws in
+
+        app.logger.info("\(String(describing: req.remoteAddress)) connected to command channel")
+
+        if !ClientMonitor.shared.commandClients.contains(where: { connection in
+            return connection.request.remoteAddress == req.remoteAddress
+        }) {
+            
+            let connection = ClientMonitor.ClientConnection(request: req, socket: ws)
+            ClientMonitor.shared.commandClients.append(connection)
+            
+            ws.onText { ws, string in
+                CommandProcessor.shared.handleCommand(commandString: string, for: ws)
+            }
+            ws.send("Command?")
+        }
+    }
 }

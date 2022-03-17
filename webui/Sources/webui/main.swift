@@ -32,52 +32,87 @@ public struct ContextObservation:Codable, Hashable {
     let app:String
     let ctx:String
     let origin:String
-    
 }
 
-struct ContentView: View {
-
-    var socket = WebSocket(url: URL(string: "ws://localhost:8080/context")!)
-    @State var fuck:AnyCancellable?
+struct ObservationView: View {
+    //
+    var observation:ContextObservation
+    let dateFormatter = DateFormatter()
     
-    @State var messages = [ContextObservation]()
+    func date() -> String {
+        
+        dateFormatter.timeStyle = .full
+
+        let timeString = dateFormatter.string(from: observation.timestamp)//observation.timestamp.formatted(date: .omitted, time: .complete)
+        let dateString = "" //observation.timestamp.formatted(date: .complete, time: .omitted)
+        return "\(timeString) \(dateString)"
+    }
     
     var body: some View {
-        HStack {
-        VStack(alignment:.leading) {
-            Text("Context Server")
-                .font(.title)
-            Divider()
-            Spacer()
-            ScrollView {
-                ForEach(messages.sorted(by: { a, b in
-                    a.timestamp > b.timestamp
-                }), id:\.self) { message in
-                    HStack(alignment:.bottom) {
-                        Text("\(message.timestamp)")
-                    VStack(alignment:.leading) {
-                        Text(message.app)
-                        Text(message.ctx)
-                    }
-                    }
-                }
+        HStack(alignment:.bottom, spacing:8.0) {
+            Text(date())
+                .padding()
+            VStack(alignment:.leading) {
+                Text(observation.app.components(separatedBy: ".").last?.capitalized ?? observation.app)
+                    .fontWeight(.bold)
+                Text(observation.ctx)
+                    .fontWeight(.light)
             }
         }
+    }
+}
+
+struct ObservationsView: View {
+    
+    private var socket = WebSocket(url: URL(string: "ws://localhost:8080/ws/context")!)
+    
+    @State private var observationRelay:AnyCancellable?
+    @State private var observations = [ContextObservation]()
+    
+    var body: some View {
+        VStack(alignment:.leading) {
+
+            Text("Observations")
+                .font(.title)
+            Divider()
+      
+            Text("\(observations.count)")
+            List {
+                
+                ForEach(observations.sorted(by: { a, b in
+                    a.timestamp > b.timestamp
+                }), id:\.self) { message in
+                   ObservationView(observation: message)
+                }
+
+            }
             Spacer()
         }
         .onAppear {
 
-            fuck = socket.messages().sink(receiveValue: { m in
+            observationRelay = socket.messages().sink(receiveValue: { m in
                 let decoder = JSONDecoder()
                 decoder.dateDecodingStrategy = .millisecondsSince1970
                 
                 if let o = try? decoder.decode(ContextObservation.self,
                                                 from: m.data(using: .utf8)!) {
-                $messages.wrappedValue.append(o)
-                    print("decoded \(o.timestamp.timeIntervalSince1970)")
+                    $observations.wrappedValue.append(o)
                 }
             })
 
+        }
+    }
+}
+
+struct ContentView: View {
+
+    var body: some View {
+        HStack {
+        VStack { //
+            ObservationsView()
+            Spacer()
+        }
+            Spacer()
         }
     }
 }

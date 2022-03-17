@@ -14,18 +14,18 @@ import OSAKit
 
 class Scripts {
 
+    // should be user configurable
+    public static var sourceLocation = URL(fileURLWithPath: "public/context-discovery/scripts/"	)
+    
     public static var vaporApp:Vapor.Application? = nil
     
     public static var unhandledAppIDs = [String]()
  
     public static func script(for appID:String) -> OSAScript? {
         
-        // shold more explicitly support other scripting langs?
-        // find a way not to rely on .applescript extension shold suffice/
-        
-        // need to get public/context-discovery/scripts/:bundleID.dataset/:bundleID.applescript
-
-        let url = URL(fileURLWithPath: "public/context-discovery/scripts/\(appID).dataset/\(appID).applescript")
+        let url = sourceLocation.appendingPathComponent(
+            URL(fileURLWithPath: "\(appID).dataset/\(appID).applescript").relativePath
+        )
         
         if let data = try? Data(contentsOf: url) {
             if let source = String(data: data, encoding: .utf8) {

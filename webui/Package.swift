@@ -2,12 +2,18 @@
 import PackageDescription
 let package = Package(
     name: "webui",
-    platforms: [.macOS(.v11)],
+    platforms: [.macOS("12")  ],
     products: [
         .executable(name: "webui", targets: ["webui"])
     ],
     dependencies: [
-        .package(name: "Tokamak", url: "https://github.com/TokamakUI/Tokamak", from: "0.9.1")
+//        .package(name: "Tokamak",
+//                 url: "https://github.com/TokamakUI/Tokamak",
+//                 from: "0.9.1"),
+        .package(
+            url: "https://github.com/TokamakUI/Tokamak",
+            .branch("main")
+        )
     ],
     targets: [
         .target(

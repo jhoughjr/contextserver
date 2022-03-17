@@ -28,9 +28,14 @@ public struct ContextObservation:Content {
 }
 
 public struct EngineState:Content {
-    let ignoreQueryInBrowserApps:Bool
+    let engineSettings:EngineSettings
     let currentObservation:ContextObservation
     let history:[ContextObservation]
+}
+
+public struct EngineSettings:Codable {
+    let ignoreQueryInBrowserApps:Bool
+    let scriptSourceLocation:String
 }
 
 public class ContextEngine: NSObject {
@@ -46,11 +51,15 @@ public class ContextEngine: NSObject {
     
     public var observationHistory = [ContextObservation]()
     public var probeHistory = [ProbeAttempt]()
+    public var engineSettings = EngineSettings(ignoreQueryInBrowserApps: false,
+                                               scriptSourceLocation: Scripts.sourceLocation.absoluteString)
     
     public func state() -> EngineState {
-        EngineState(ignoreQueryInBrowserApps: false,
+        EngineState(engineSettings: engineSettings ,
                     currentObservation: currentObservation(),
-                    history: observationHistory)
+                    history: observationHistory.sorted(by: { a, b in
+            a.timestamp > b.timestamp
+        }))
     }
     
     public func currentObservation() -> ContextObservation {
