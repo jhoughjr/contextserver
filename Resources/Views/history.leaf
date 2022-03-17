@@ -2,6 +2,9 @@
     #export("content"):
         <p><h2>Context Engine History</h2></p>
         <hr>
+        <footnote>
+            This list is reset each run of the server.
+        </footnote>
         <div id="history" display="none">
           <pre>#(history)</pre>
         </div>

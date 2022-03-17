@@ -5,6 +5,9 @@
         <button onClick="window.location.href='http://localhost:8080/leaf/history'">
         History
     </button>
+        <button onClick="window.location.href='http://localhost:8080/leaf/state'">
+        State
+    </button>
     <button onClick="window.location.href='http://localhost:8080/leaf/settings'">
         Settings
     </button>

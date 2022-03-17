@@ -17,6 +17,7 @@ public enum ContextDiscoveryStrategy:String,Content {
 public struct ProbeAttempt:Content {
     let timestamp:Date
     let strategy:ContextDiscoveryStrategy
+    let script:String
     let observation:ContextObservation
 }
 
@@ -37,6 +38,15 @@ public struct EngineSettings:Codable {
     let ignoreQueryInBrowserApps:Bool
     let scriptSourceLocation:String
 }
+public struct EngineState2:Codable {
+    var launchedAt:Date?
+    var observations:UInt
+    var running:Bool
+}
+
+public struct ServerState:Codable {
+    let socketClients:UInt
+}
 
 public class ContextEngine: NSObject {
     
@@ -54,6 +64,8 @@ public class ContextEngine: NSObject {
     public var engineSettings = EngineSettings(ignoreQueryInBrowserApps: false,
                                                scriptSourceLocation: Scripts.sourceLocation.absoluteString)
     
+    public var engineState:EngineState2? = nil
+    
     public func state() -> EngineState {
         EngineState(engineSettings: engineSettings ,
                     currentObservation: currentObservation(),
@@ -63,9 +75,10 @@ public class ContextEngine: NSObject {
     }
     
     public func currentObservation() -> ContextObservation {
+        
         let o = ContextObservation(timestamp: Date(), app: currentAppId,
                                    ctx: currentContextId,
-                                   origin: "")
+                                   origin: "\(vaporApp!.http.server.configuration.address)" )
         vaporApp?.logger.debug("[ENGINE] observed: \(o)")
         return o
     }
@@ -86,9 +99,14 @@ public class ContextEngine: NSObject {
         let observation = currentObservation()
         
         observationHistory.append(observation)
-        // after probe see if changed if so notify
-        probeHistory.append(ProbeAttempt(timestamp:Date(), strategy: s, observation: observation))
         
+        // after probe see if changed if so notify
+        // should store thsi with engine state to map the observation with the probe it came form
+        probeHistory.append(ProbeAttempt(timestamp:Date(), strategy: s,script:Scripts.script(for: observation.app)?.source ?? "", observation: observation))
+        
+        engineState = EngineState2(launchedAt: engineState?.launchedAt,
+                                   observations: UInt(observationHistory.count),
+                                   running: engineState?.running ?? false)
         if let last = observationHistory.last {
             
             let nextToLast = observationHistory[ observationHistory.endIndex - 1]
@@ -142,10 +160,24 @@ public class ContextEngine: NSObject {
         obs = nil
     }
     
+    public func start() {
+        startObservingMenubarOwner()
+        engineState = EngineState2(launchedAt: Date(),
+                                   observations: UInt(observationHistory.count),
+                                   running: true)
+    }
+    
+    public func stop() {
+        obs = nil
+        engineState = EngineState2(launchedAt: engineState?.launchedAt,
+                                   observations: UInt(observationHistory.count),
+                                   running: false)
+    }
+    
     public init(app:Application?) {
         super.init()
         self.vaporApp = app
-        startObservingMenubarOwner()
+        start()
     }
     
     func strategy(for appID:String) -> ContextDiscoveryStrategy {

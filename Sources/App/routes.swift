@@ -1,11 +1,6 @@
 import Vapor
 import Foundation
 
-struct EnginePageContext:Content {
-    let title:String
-    let engineState:EngineState
-}
-
 func encode<T: Codable>(_ o: T) -> String  {
     
     let encoder = JSONEncoder()
@@ -21,20 +16,39 @@ func encode<T: Codable>(_ o: T) -> String  {
 
 func routes(_ app: Application) throws {
     
+    // basic web admin interface
     app.get("leaf","engine") { req async throws -> View in
-        let ctx = ContextEngine.shared.state().currentObservation
-        return try await req.view.render("engine", ["title":"Engine Status", "status" : encode(ctx), "date":Date().formatted(date: .complete, time: .complete)])
+        let ctx = ContextEngine.shared.probeHistory.last
+        return try await req.view.render("engine", ["title":"Engine Status",
+                                                    "status" : encode(ctx),
+                                                    "date":Date().formatted(date: .complete,
+                                                                            time: .complete)])
     }
     
     app.get("leaf","history") { req async throws -> View in
-        let ctx = ContextEngine.shared.state().history
+        let ctx = ContextEngine.shared.probeHistory.sorted { a, b in
+            a.timestamp > b.timestamp
+        }
         
-        return try await req.view.render("history", ["title":"Engine History", "history" : encode(ctx), "date":Date().formatted(date: .complete, time: .complete)])
+        return try await req.view.render("history", ["title":"Engine History",
+                                                     "history" : encode(ctx),
+                                                     "date":Date().formatted(date: .complete,
+                                                                             time: .complete)])
     }
     
+    app.get("leaf","state") { req async throws -> View in
+        let ctx = ContextEngine.shared.engineState
+        return try await req.view.render("state",  ["title":"Engine State",
+                                                       "state" : encode(ctx),
+                                                       "date":Date().formatted(date: .complete,
+                                                                               time: .complete)])
+    }
     app.get("leaf","settings") { req async throws -> View in
         let ctx = ContextEngine.shared.engineSettings
-        return try await req.view.render("settings",  ["title":"Engine Settings", "settings" : encode(ctx), "date":Date().formatted(date: .complete, time: .complete)])
+        return try await req.view.render("settings",  ["title":"Engine Settings",
+                                                       "settings" : encode(ctx),
+                                                       "date":Date().formatted(date: .complete,
+                                                                               time: .complete)])
     }
     
     // JSON Interface
