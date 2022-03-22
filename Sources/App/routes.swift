@@ -1,5 +1,7 @@
 import Vapor
 import Foundation
+import Network
+import NIOTransportServices
 
 func encode<T: Codable>(_ o: T) -> String  {
     
@@ -14,9 +16,16 @@ func encode<T: Codable>(_ o: T) -> String  {
     }
 }
 
+
 func routes(_ app: Application) throws {
     
     // basic web admin interface
+    app.get("leaf", "websocketprompt") { req async throws -> View in
+        return try await req.view.render("websocketprompt", ["title":"Websocket Command Prompt",
+                                                    "date":Date().formatted(date: .complete,
+                                                                            time: .complete)])
+    }
+    
     app.get("leaf","engine") { req async throws -> View in
         let ctx = ContextEngine.shared.probeHistory.last
         return try await req.view.render("engine", ["title":"Engine Status",
@@ -43,6 +52,14 @@ func routes(_ app: Application) throws {
                                                        "date":Date().formatted(date: .complete,
                                                                                time: .complete)])
     }
+    
+    app.get("leaf","welcome") { req async throws -> View in
+        let ctx = ContextEngine.shared.engineState
+        return try await req.view.render("welcome",  ["title":"Welcome to Context Engine",
+                                                      "build": Commands.ver.rawValue,
+                                                       "date":Date().formatted(date: .complete,
+                                                                               time: .complete)])
+    }
     app.get("leaf","settings") { req async throws -> View in
         let ctx = ContextEngine.shared.engineSettings
         return try await req.view.render("settings",  ["title":"Engine Settings",
@@ -61,6 +78,25 @@ func routes(_ app: Application) throws {
     
     app.get("json","engine") { req -> String in
         encode(ContextEngine.shared.state())
+    }
+    
+    app.get("json","version") { req -> String in
+        encode(Commands.ver.execute())
+    }
+    
+    app.post("json","settings","validateScriptPath") { req -> String in
+        
+        let validation = try req.content.decode(ScriptPathValidation.self)
+        let res = try await ContextEngine.shared.isValidScriptPath(validation)
+        if res.isValid == true {
+            // should access storage to set new value
+            UserDefaults.standard.set(validation.path, forKey: "scriptSourceLocation")
+            UserDefaults.standard.synchronize()
+            app.logger.info("set new script source path \(validation.path)")
+        }
+        let coded = encode(res)
+        req.logger.debug("\(coded)")
+        return coded
     }
     
     app.get("json","currentObservation") { req -> String in
@@ -85,7 +121,7 @@ func routes(_ app: Application) throws {
             let connection = ClientMonitor.ClientConnection(request: req, socket: ws)
             ClientMonitor.shared.contextClients.append(connection)
         }
-        ws.send( encode(ContextEngine.shared.currentObservation()) )
+        ws.send(encode(ContextEngine.shared.currentObservation()) )
     }
     
     app.webSocket("ws","command") { req, ws in
@@ -102,7 +138,7 @@ func routes(_ app: Application) throws {
             ws.onText { ws, string in
                 CommandProcessor.shared.handleCommand(commandString: string, for: ws)
             }
-            ws.send("Command?")
+            ws.send("READY>")
         }
     }
 }

@@ -1,0 +1,76 @@
+#extend("master"):
+    #export("content"):
+          <h2>Websocket Command Prompt</h2>
+          <pre>
+          <div id="lastMessageTime"  style="color:orange"></div>
+          <div id="output" style="color:green" autoscroll=true>
+          </div>
+          </pre>
+          <p align="leading">
+             <input type="text" id="input" name="input" onfocus="this.value=''" style="color:green" >
+          </p>
+
+        <script>
+
+            var ws = new WebSocket("ws://localhost:8080/ws/command");
+            var output = document.getElementById("output");
+            var input = document.getElementById("input");            
+
+            function setupWebSocket() {
+
+                ws.addEventListener('open', function (event) {
+                    output.innerText = output.innerText + "\n" + "OPEN CONNECTION.";
+                });
+
+                // Listen for messages
+                ws.addEventListener('message', function (event) {
+                    output.innerText = output.innerText + "\n" + event.data;
+                    input.value= "";
+                    document.getElementById("lastMessageTime").innerHTML= "Last Message " + new Date();
+                });
+
+            }
+
+            function stringFor(s) {
+                if (s == 0 ){
+                    return "connecting"
+                }else  if (s == 1) {
+                    return "open"
+                }else if (s == 2) {
+                    return "closing"
+                }else if (s == 3) {
+                    return "closed"
+                }else {
+                    return "?"
+                }
+            }
+
+            // parse the command
+            input.addEventListener('change', (event) => {
+            
+                if (event.target.value == "open") {
+                    ws = new WebSocket("ws://localhost:8080/ws/command");
+                    setupWebSocket();
+                }else 
+                if (event.target.value == "clr") {
+                    output.innerText = "";
+                    event.target.value = "";
+                } else if(event.target.value == "stat") {
+                console.log("stat" + ws.readyState);
+                    output.innerText = output.innerText + "\n" + stringFor(ws.readyState);
+                }else {
+                ws.send(event.target.value);
+                }
+            });
+           
+           // log the open event
+  
+            window.onload = function() {
+                setupWebSocket();
+                input.focus();
+            }
+
+        </script>
+
+    #endexport
+#endextend

@@ -11,4 +11,8 @@
     <button onClick="window.location.href='http://localhost:8080/leaf/settings'">
         Settings
     </button>
+    <button onClick="window.location.href='http://localhost:8080/leaf/websocketprompt'">
+        Websocket Command Prompt
+    </button>
+    <hr>
 </div>

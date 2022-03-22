@@ -1,0 +1,46 @@
+#extend("master"):
+    #export("content"):
+          <p><h2>Welcome to Context Engine</h2></p>
+          <hr>
+
+          <a href="./websocketprompt">
+            Web Socket Command Prompt
+          </a>
+          <a href="">
+          </a>
+            <!--
+          <div display="hidden" id="notes">
+          Context Engine is a powerful tool for automation and introspection on your computer running macOS 12 or higher.
+
+
+             It observes the workspace's current app you are using and determines what is meaningful about that app currently.
+             Context Engine provides a convenient wevsocket api allowing any client to receive a stream of context changes.
+             A client app can do a number of things based upon this sequence of contexts, triggering other actions or logging.
+
+             A unqique value proposition of Context Engine is the new idea of Contextual Notes. The idea behind contextual notes is simple; To have the note you need, when you need it.
+             This helps remove distractions as well as offers no search overhead.
+             The premise of contextual notes requires context discovery and was the genitor of Context Engine.
+
+            <h3>How it works</h3>
+            <p>Context Engine has two macOS faccilities at its heart. These are Key Value Observing and applescript/osascript.
+            When running the engine observes NSworkspace.shared.menubarOwningApplication.
+            When that observation occurs, the Context Engine looks at a strategy dictionary to determine how to find the context for the current app.
+            Current strategies are [.script,.api] with only .script available in this version.
+            It then performs a ProbeAttempt which can be done via a strategy above and will contain a Context Observation.
+            Once resolved, websocket clients are notified.
+            <h3>Notes</h3>
+
+            In either case the goal is the result of the operation, merely a string value that will be considered the current app's context.
+
+
+            Scripts are required because what is contextual very well may not be as simple as the window title or files open by the process.
+            With macOS's OSAScript support manifesting in a large number of apps the context's determined and thus possibilites are many.
+        </div>        
+            -->
+
+        <script>
+          
+        </script>
+
+    #endexport
+#endextend

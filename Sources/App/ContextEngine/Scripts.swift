@@ -23,9 +23,18 @@ class Scripts {
  
     public static func script(for appID:String) -> OSAScript? {
         
-        let url = sourceLocation.appendingPathComponent(
-            URL(fileURLWithPath: "\(appID).dataset/\(appID).applescript").relativePath
-        )
+        var url:URL
+        
+        if let stored = UserDefaults.standard.string(forKey: "scriptSourceLocation"),
+           let uStored = URL(string: stored) {
+            url = uStored.appendingPathComponent(
+                URL(fileURLWithPath: "\(appID).dataset/\(appID).applescript").relativePath
+            )
+        }else {
+            url = sourceLocation.appendingPathComponent(
+                URL(fileURLWithPath: "\(appID).dataset/\(appID).applescript").relativePath
+            )
+        }
         
         if let data = try? Data(contentsOf: url) {
             if let source = String(data: data, encoding: .utf8) {

@@ -5,14 +5,20 @@ body {
   color: black;
   font-size: 25px;
 }
-
+input, textarea {
+  background-color: #222020;
+  border: none;
+}
 button {
-  padding: 25px;
-  background-color: rgba(255, 255, 255, 0.418);
-  color: rgb(255, 255, 255);
+  padding: 4px;
+  background-color: rgb(15, 14, 14);
+  color:  #f3be5d;
   font-size: 25px;
+  border-radius: 12px;
 }
 .dark-mode {
   background-color: black;
-  color: white;
+  color: #f3be5d;
 }
+/* * {cursor: url(http://labs.semplice.com/wp-content/uploads/2020/02/custom-cursor-arrow.png) 20 20, auto;}
+input, div {padding: 20px;} */

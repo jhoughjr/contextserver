@@ -1,8 +1,7 @@
 
 #extend("master"):
     #export("content"):
-        <p><h2>Current Observation</h2></p>
-        <hr>
+        <p><h2>Latest Probe Attempt</h2></p>
         <div id="status" display="none">
           <pre>#(status)</pre>
         </div>

@@ -35,17 +35,25 @@ public struct EngineState:Content {
 }
 
 public struct EngineSettings:Codable {
-    let ignoreQueryInBrowserApps:Bool
     let scriptSourceLocation:String
 }
 public struct EngineState2:Codable {
     var launchedAt:Date?
+    var timestamp:Date
     var observations:UInt
     var running:Bool
 }
 
 public struct ServerState:Codable {
     let socketClients:UInt
+}
+
+public struct ScriptPathValidation:Content {
+    let path:String
+}
+
+public struct ScriptPathValidationResult:Content {
+    let isValid:Bool
 }
 
 public class ContextEngine: NSObject {
@@ -61,10 +69,39 @@ public class ContextEngine: NSObject {
     
     public var observationHistory = [ContextObservation]()
     public var probeHistory = [ProbeAttempt]()
-    public var engineSettings = EngineSettings(ignoreQueryInBrowserApps: false,
-                                               scriptSourceLocation: Scripts.sourceLocation.absoluteString)
+    public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString)
     
     public var engineState:EngineState2? = nil
+    
+    public func isValidScriptPath(_ p:ScriptPathValidation) async throws -> ScriptPathValidationResult {
+        ScriptPathValidationResult(isValid:directoryExistsAtPath(p.path))
+
+    }
+    
+    fileprivate func directoryExistsAtPath(_ path: String) -> Bool {
+        
+        guard !path.isEmpty else { return false }
+        
+        if FileManager.default.isReadableFile(atPath: path) {
+            vaporApp!.logger.info("readable")
+        }else {
+            vaporApp!.logger.info("not readable")
+        }
+        do {
+
+            let u = URL(string:path)
+            try Data(contentsOf: u!, options: [])
+        }
+        catch {
+            if error.localizedDescription.contains("no such file") {
+                return false
+            }else if error.localizedDescription.contains("file") {
+                return true
+            }
+            return false
+        }
+        return false
+    }
     
     public func state() -> EngineState {
         EngineState(engineSettings: engineSettings ,
@@ -82,6 +119,8 @@ public class ContextEngine: NSObject {
         vaporApp?.logger.debug("[ENGINE] observed: \(o)")
         return o
     }
+    
+    //TODO: Add logic to ignore query string in browser apps
     
     public func probeContext() {
         vaporApp?.logger.info("probing...")
@@ -101,10 +140,12 @@ public class ContextEngine: NSObject {
         observationHistory.append(observation)
         
         // after probe see if changed if so notify
-        // should store thsi with engine state to map the observation with the probe it came form
-        probeHistory.append(ProbeAttempt(timestamp:Date(), strategy: s,script:Scripts.script(for: observation.app)?.source ?? "", observation: observation))
+        probeHistory.append(ProbeAttempt(timestamp:Date(),
+                                         strategy: s,
+                                         script:Scripts.script(for: observation.app)?.source ?? "",
+                                         observation: observation))
         
-        engineState = EngineState2(launchedAt: engineState?.launchedAt,
+        engineState = EngineState2(launchedAt: engineState?.launchedAt, timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: engineState?.running ?? false)
         if let last = observationHistory.last {
@@ -162,14 +203,14 @@ public class ContextEngine: NSObject {
     
     public func start() {
         startObservingMenubarOwner()
-        engineState = EngineState2(launchedAt: Date(),
+        engineState = EngineState2(launchedAt: Date(), timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: true)
     }
     
     public func stop() {
         obs = nil
-        engineState = EngineState2(launchedAt: engineState?.launchedAt,
+        engineState = EngineState2(launchedAt: engineState?.launchedAt, timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: false)
     }

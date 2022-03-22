@@ -2,16 +2,63 @@
 #extend("master"):
     #export("content"):
           <p><h2>Context Engine Settings</h2></p>
-          <hr>
         <div id="settings" display="none">
           <pre>#(settings)</pre>
         </div>
+        <p>
+        Script Location
+        <input type="text" accept="public.url" id="scriptpath" name="scriptpath"><div id="validSign">Not changed</div><button onClick="changeScriptPath();" title="Sets the context detection scripts location.">Change</button>
+        </p>
+        <p>
+        <label class="switch">
+          <input type="checkbox">
+           App Context Detection
+          <span class="slider"></span>
+  
+        </label>
+        </p>
+
         <script>
             let statusEl = document.getElementById("settings");
             let stateObject = JSON.parse(statusEl.innerText);
             let pretty = JSON.stringify(stateObject, null, '\t');
+
+            let picker = document.getElementById("scriptpath");
+
+            picker.value = stateObject.scriptSourceLocation
             statusEl.innerHTML = "<pre>" + pretty + "</pre>";
             statusEl.setAttribute("display", "block");
+
+            function changeScriptPath() {
+
+              var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/validateScriptPath',
+                                    {method: 'POST',
+                                    body: '{"path":"' + picker.value + '"}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  if (response.isValid) {
+                    document.getElementById("validSign").innerText = "Accepted"
+                  }else {
+                    document.getElementById("validSign").innerText = "Not Accepted"
+                  }
+                }).catch(error => {
+                  console.error(error);
+                });
+          }
         </script>
+
     #endexport
 #endextend
