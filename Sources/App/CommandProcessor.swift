@@ -19,12 +19,8 @@ enum Commands:String, Codable, CaseIterable {
     case context
     case bye
     case history
+    case routes
     
-    var encoder:JSONEncoder {
-        let c = JSONEncoder()
-        c.outputFormatting = [.prettyPrinted,.sortedKeys,.withoutEscapingSlashes]
-        return c
-    }
     func execute() -> String {
         
         switch self {
@@ -65,13 +61,36 @@ enum Commands:String, Codable, CaseIterable {
             ContextEngine.shared.probeContext()
             return Commands.context.execute()
         case .history:
-            return String(data: try! encoder.encode(ContextEngine.shared.probeHistory.reversed()), encoding:.utf8) ?? ""
-            
+            return  App.encode(ContextEngine.shared.probeHistory.reversed())
+        case .routes:
+            return App.encode(
+                ["routes":["json":["get":["engine",
+                                                 "version",
+                                                 "unhandledApps",
+                                                 "settings",
+                                                 "currentObservation",
+                                                 "probeHistory",
+                                                 "observationHistory"],
+                                          "post":["setttings/validateScriptPath",
+                                                  "settings/ignoredApps"]
+                                         ],
+                                  "leaf":["get":["welcome",
+                                                 "settings",
+                                                 "state",
+                                                 "engine",
+                                                 "history",
+                                                 "websocketprompt"],
+                                  "ws":["context","command"]
+                                         ]
+                                 ]
+                       ]
+                          )
         }
     }
 }
 
 class CommandProcessor {
+    
     static let shared = CommandProcessor()
     
     func handleCommand(commandString:String,
@@ -80,8 +99,14 @@ class CommandProcessor {
         if let command = Commands.allCases.first(where: { co in
            return  co.rawValue == commandString
         }) {
-            ws.send("'\(command)' executing...")
-            ws.send("\(command.execute())")
+            ws.send("'\(command)' executing...") // mark execution start
+            if command == .help {
+                ws.send(command.execute() + " * Client commands are open, clr, and bye")
+            }
+            ws.send("\(command.execute())") // send result
+            // local commands arent enumerated, so check here for them
+            // other local commands are captured in teh webui
+            // seems scattered but makes sense in situ
             if command == .bye {
                 ws.send("bye!")
                 _ = ws.close()

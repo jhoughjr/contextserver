@@ -85,20 +85,6 @@ func routes(_ app: Application) throws {
     }
     
     // JSON Interface
-    app.get("json","") { req -> String in
-        encode(["routes":["engine",
-                          "currentObservation",
-                          "probeHistory",
-                          "observationHistory"]])
-    }
-    
-    app.get("json","engine") { req -> String in
-        encode(ContextEngine.shared.state())
-    }
-    
-    app.get("json","version") { req -> String in
-        encode(Commands.ver.execute())
-    }
     
     app.post("json","settings","validateScriptPath") { req -> String in
         
@@ -126,6 +112,37 @@ func routes(_ app: Application) throws {
             }
         }
         return encode(ContextEngine.shared.ignoredBundleIDs)
+    }
+    
+    app.get("json","routes") { req -> String in
+        encode(["routes":["json":["get":["engine",
+                                         "version",
+                                         "unhandledApps",
+                                         "settings",
+                                         "currentObservation",
+                                         "probeHistory",
+                                         "observationHistory"],
+                                  "post":["setttings/validateScriptPath",
+                                          "settings/ignoredApps"]
+                                 ],
+                          "leaf":["get":["welcome",
+                                         "settings",
+                                         "state",
+                                         "engine",
+                                         "history",
+                                         "websocketprompt"],
+                          "ws":["context","command"]
+                                 ]
+                         ]
+               ])
+    }
+    
+    app.get("json","engine") { req -> String in
+        encode(ContextEngine.shared.state())
+    }
+    
+    app.get("json","version") { req -> String in
+        encode(Commands.ver.execute())
     }
     
     app.get("json","unhandledApps") { req -> String in
