@@ -32,8 +32,9 @@ func routes(_ app: Application) throws {
     // basic web admin interface
     app.get("leaf", "websocketprompt") { req async throws -> View in
         return try await req.view.render("websocketprompt", ["title":"Websocket Command Prompt",
-                                                    "date":Date().formatted(date: .complete,
-                                                                            time: .complete)])
+                                                             "date":Date().formatted(date: .complete,
+                                                                            time: .complete),
+                                                             "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
     
     app.get("leaf","engine") { req async throws -> View in
@@ -41,7 +42,8 @@ func routes(_ app: Application) throws {
         return try await req.view.render("engine", ["title":"Engine Status",
                                                     "status" : encode(ctx),
                                                     "date":Date().formatted(date: .complete,
-                                                                            time: .complete)])
+                                                                            time: .complete),
+                                                    "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
     
     app.get("leaf","history") { req async throws -> View in
@@ -52,7 +54,8 @@ func routes(_ app: Application) throws {
         return try await req.view.render("history", ["title":"Engine History",
                                                      "history" : encode(ctx),
                                                      "date":Date().formatted(date: .complete,
-                                                                             time: .complete)])
+                                                                             time: .complete),
+                                                     "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
     
     app.get("leaf","state") { req async throws -> View in
@@ -60,14 +63,16 @@ func routes(_ app: Application) throws {
         return try await req.view.render("state",  ["title":"Engine State",
                                                        "state" : encode(ctx),
                                                        "date":Date().formatted(date: .complete,
-                                                                               time: .complete)])
+                                                                               time: .complete),
+                                                    "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
     
     app.get("leaf","welcome") { req async throws -> View in
         return try await req.view.render("welcome",  ["title" : "Welcome to Context Engine",
                                                       "build" : Commands.ver.rawValue,
                                                        "date" : Date().formatted(date: .complete,
-                                                                                time: .complete)])
+                                                                                time: .complete),
+                                                      "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
     
     app.get("leaf","settings") { req async throws -> View in
@@ -75,7 +80,8 @@ func routes(_ app: Application) throws {
         return try await req.view.render("settings",  ["title":"Engine Settings",
                                                        "settings" : encode(ctx),
                                                        "date":Date().formatted(date: .complete,
-                                                                               time: .complete)])
+                                                                               time: .complete),
+                                                       "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
     
     // JSON Interface

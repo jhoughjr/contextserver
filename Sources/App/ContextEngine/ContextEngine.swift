@@ -8,6 +8,14 @@
 import AppKit
 import Vapor
 
+public struct StrategyFile:Content {
+    let strategies:[DiscoveryStratgeySpec]
+}
+
+public struct DiscoveryStratgeySpec:Content {
+    let bundleID:String
+    let startegy:ContextDiscoveryStrategy
+}
 
 public enum ContextDiscoveryStrategy:String,Content {
     case script
@@ -37,6 +45,7 @@ public struct EngineState:Content {
 public struct EngineSettings:Codable {
     let scriptSourceLocation:String
 }
+
 public struct EngineState2:Codable {
     var launchedAt:Date?
     var timestamp:Date
@@ -123,7 +132,7 @@ public class ContextEngine: NSObject {
     //TODO: Add logic to ignore query string in browser apps
     
     public func probeContext() {
-        vaporApp?.logger.info("probing...")
+        vaporApp?.logger.debug("probing...")
 
         let s = strategy(for: currentAppId)
         
@@ -145,9 +154,11 @@ public class ContextEngine: NSObject {
                                          script:Scripts.script(for: observation.app)?.source ?? "",
                                          observation: observation))
         
-        engineState = EngineState2(launchedAt: engineState?.launchedAt, timestamp: Date(),
+        engineState = EngineState2(launchedAt: engineState?.launchedAt,
+                                   timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: engineState?.running ?? false)
+        
         if let last = observationHistory.last {
             
             let nextToLast = observationHistory[ observationHistory.endIndex - 1]
@@ -222,6 +233,12 @@ public class ContextEngine: NSObject {
     }
     
     func strategy(for appID:String) -> ContextDiscoveryStrategy {
+        // should get from file
+        // maybe json
+        /*
+         [{"bundleID":{"strat":""}}]
+         
+         */
         return .script
     }
 }
