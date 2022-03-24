@@ -1,0 +1,15 @@
+
+#extend("master"):
+    #export("content"):
+          <p><h2>App TImes</h2></p>
+        <div id="appTimes" display="none">
+          <pre>#(appTimes)</pre>
+        </div>
+          
+        <script>
+          
+           
+        </script>
+
+    #endexport
+#endextend

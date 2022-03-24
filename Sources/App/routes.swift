@@ -74,6 +74,19 @@ func routes(_ app: Application) throws {
                                                                                 time: .complete),
                                                       "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
+    app.get("leaf","times") { req async throws -> View in
+        
+        let times = EngineTimer.shared.appTimes.map { f in
+            return [f.key:"\(f.value)"]
+        }
+        
+        return try await req.view.render("times",  ["title" : "Context Engine App Times",
+                                                      "build" : Commands.ver.rawValue,
+                                                       "date" : Date().formatted(date: .complete,
+                                                                                time: .complete),
+                                                      "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)",
+                                                    "appTimes":App.encode(times)])
+    }
     
     app.get("leaf","settings") { req async throws -> View in
         let ctx = ContextEngine.shared.engineSettings
@@ -114,6 +127,10 @@ func routes(_ app: Application) throws {
         return encode(ContextEngine.shared.ignoredBundleIDs)
     }
     
+    app.get("json","times") { req -> String in
+        encode(EngineTimer.shared.appTimes)
+    }
+    
     app.get("json","routes") { req -> String in
         encode(["routes":["json":["get":["engine",
                                          "version",
@@ -121,7 +138,8 @@ func routes(_ app: Application) throws {
                                          "settings",
                                          "currentObservation",
                                          "probeHistory",
-                                         "observationHistory"],
+                                         "observationHistory",
+                                         "times"],
                                   "post":["setttings/validateScriptPath",
                                           "settings/ignoredApps"]
                                  ],

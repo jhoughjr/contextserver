@@ -23,7 +23,6 @@ input, textarea {
   border: 4px;
   font-family: monospace;
   font-size: 25px;
-  clip: rect();
 }
 
 button {

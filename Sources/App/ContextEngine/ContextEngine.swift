@@ -199,7 +199,6 @@ public class ContextEngine: NSObject {
             if let bundleID = change.newValue??.bundleIdentifier {
                 
                 self?.vaporApp?.logger.info("app changed to \(bundleID)")
-                // stop timing and keep record
                 self?.currentAppId = bundleID
                 EngineTimer.shared.timedApp = bundleID
                 self?.probeContext()
@@ -212,6 +211,9 @@ public class ContextEngine: NSObject {
     }
     
     public func start() {
+        
+        EngineTimer.shared.timedApp =  NSWorkspace.shared.menuBarOwningApplication?.bundleIdentifier ?? ""
+        
         startObservingMenubarOwner()
         engineState = EngineState2(launchedAt: Date(),
                                    timestamp: Date(),
@@ -221,6 +223,7 @@ public class ContextEngine: NSObject {
     
     public func stop() {
         obs = nil
+        EngineTimer.shared.timedApp = ""
         engineState = EngineState2(launchedAt: engineState?.launchedAt, timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: false)
