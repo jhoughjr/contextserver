@@ -7,6 +7,7 @@
 
 import AppKit
 import Vapor
+import MongoKitten
 
 public struct StrategyFile:Content {
     let strategies:[DiscoveryStratgeySpec]

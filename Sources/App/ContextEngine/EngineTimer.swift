@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  EngineTimer.swift
 //  
 //
 //  Created by Jimmy on 3/23/22.
@@ -7,6 +7,7 @@
 
 import Foundation
 import Vapor
+import BSON
 
 enum APIType:Content {
     case webSocket
@@ -22,12 +23,20 @@ struct APISpec:Content {
 }
 
 class EngineTimer {
+    
     static let shared = EngineTimer(nil)
     var vaporApp:Vapor.Application?
     
     var appTimes = [String:Double]()
     
     var timedApp = "" {
+        willSet {
+            if let times = vaporApp?.mongoDB["times"] {
+                times.insert()
+            
+            
+            }
+        }
         didSet {
             timeApp()
         }
@@ -46,7 +55,6 @@ class EngineTimer {
             }else {
                 self.appTimes[self.timedApp] = 1
             }
-            
         }
     }
 
