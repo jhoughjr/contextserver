@@ -7,17 +7,9 @@
         </div>
         <p>
         Script Location
-        <input type="text" accept="public.url" id="scriptpath" name="scriptpath"><div id="validSign">Not changed</div><button onClick="changeScriptPath();" title="Sets the context detection scripts location.">Change</button>
+        <input type="text" size="128" accept="public.url" id="scriptpath" name="scriptpath"><div id="validSign">Not changed</div><button onClick="changeScriptPath();" title="Sets the context detection scripts location.">Change</button>
         </p>
-        <p>
-        <label class="switch">
-          <input type="checkbox">
-           App Context Detection
-          <span class="slider"></span>
-  
-        </label>
-        </p>
-
+        
         <script>
             let statusEl = document.getElementById("settings");
             let stateObject = JSON.parse(statusEl.innerText);

@@ -74,8 +74,6 @@ public class ContextEngine: NSObject {
     private var currentAppId = ""
     private var currentContextId = ""
     
-    private let encoder = JSONEncoder()
-    
     public var observationHistory = [ContextObservation]()
     public var probeHistory = [ProbeAttempt]()
     public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString)
@@ -128,9 +126,7 @@ public class ContextEngine: NSObject {
         vaporApp?.logger.debug("[ENGINE] observed: \(o)")
         return o
     }
-    
-    //TODO: Add logic to ignore query string in browser apps
-    
+        
     public func probeContext() {
         vaporApp?.logger.debug("probing...")
 
@@ -201,8 +197,11 @@ public class ContextEngine: NSObject {
                                               options: [.new]) {[weak self] ws, change in
             
             if let bundleID = change.newValue??.bundleIdentifier {
+                
                 self?.vaporApp?.logger.info("app changed to \(bundleID)")
+                // stop timing and keep record
                 self?.currentAppId = bundleID
+                EngineTimer.shared.timedApp = bundleID
                 self?.probeContext()
             }
         }
@@ -214,7 +213,8 @@ public class ContextEngine: NSObject {
     
     public func start() {
         startObservingMenubarOwner()
-        engineState = EngineState2(launchedAt: Date(), timestamp: Date(),
+        engineState = EngineState2(launchedAt: Date(),
+                                   timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: true)
     }

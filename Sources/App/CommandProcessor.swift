@@ -8,6 +8,11 @@
 import Foundation
 import Vapor
 
+struct AppTime:Content {
+    let bundleID:String
+    let time:TimeInterval
+}
+
 enum Commands:String, Codable, CaseIterable {
     case probe
     case help
@@ -20,6 +25,7 @@ enum Commands:String, Codable, CaseIterable {
     case bye
     case history
     case routes
+    case times
     
     func execute() -> String {
         
@@ -85,6 +91,8 @@ enum Commands:String, Codable, CaseIterable {
                                  ]
                        ]
                           )
+        case .times:
+            return App.encode(EngineTimer.shared.appTimes)
         }
     }
 }

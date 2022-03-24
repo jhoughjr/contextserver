@@ -3,22 +3,40 @@ body {
   padding: 25px;
   background-color: white;
   color: black;
+  font-family: monospace;
   font-size: 25px;
 }
+
+h1 {
+  font-family: monospace;
+}
+h2 {
+  font-family: monospace;
+}
+
+h3 {
+  font-family: monospace;
+}
+
 input, textarea {
   background-color: #222020;
-  border: none;
+  border: 4px;
+  font-family: monospace;
+  font-size: 25px;
+  clip: rect();
 }
+
 button {
   padding: 4px;
   background-color: rgb(15, 14, 14);
   color:  #f3be5d;
   font-size: 25px;
+  border:none;
   border-radius: 12px;
+  font-family: monospace;
 }
+
 .dark-mode {
   background-color: black;
   color: #f3be5d;
 }
-/* * {cursor: url(http://labs.semplice.com/wp-content/uploads/2020/02/custom-cursor-arrow.png) 20 20, auto;}
-input, div {padding: 20px;} */
