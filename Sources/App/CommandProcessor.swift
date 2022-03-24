@@ -9,6 +9,7 @@ import Foundation
 import Vapor
 
 enum Commands:String, Codable, CaseIterable {
+    case probe
     case help
     case setScriptSource
     case start
@@ -17,11 +18,17 @@ enum Commands:String, Codable, CaseIterable {
     case app
     case context
     case bye
+    case history
     
+    var encoder:JSONEncoder {
+        let c = JSONEncoder()
+        c.outputFormatting = [.prettyPrinted,.sortedKeys,.withoutEscapingSlashes]
+        return c
+    }
     func execute() -> String {
         
         switch self {
-            
+
         case .app:
             return ContextEngine.shared.currentObservation().app
         case .context:
@@ -35,12 +42,12 @@ enum Commands:String, Codable, CaseIterable {
                 }
             }
         return
-        """
-        Commands are:
-        \(list)
-        READY>
-            
-        """
+            """
+            Commands are:
+            \(list)
+            READY>
+                
+            """
         case .setScriptSource:
             return "nop"
         case .start:
@@ -53,8 +60,12 @@ enum Commands:String, Codable, CaseIterable {
             return "1.0.0 build 1"
         case .bye:
             return ""
-        default:
-            return "unknown commamd"
+        case .probe:
+            
+            ContextEngine.shared.probeContext()
+            return Commands.context.execute()
+        case .history:
+            return String(data: try! encoder.encode(ContextEngine.shared.probeHistory.reversed()), encoding:.utf8) ?? ""
             
         }
     }

@@ -70,6 +70,7 @@ public class ContextEngine: NSObject {
     public var observationHistory = [ContextObservation]()
     public var probeHistory = [ProbeAttempt]()
     public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString)
+    public var ignoredBundleIDs = [String]()
     
     public var engineState:EngineState2? = nil
     
@@ -88,9 +89,8 @@ public class ContextEngine: NSObject {
             vaporApp!.logger.info("not readable")
         }
         do {
-
             let u = URL(string:path)
-            try Data(contentsOf: u!, options: [])
+            _ = try Data(contentsOf: u!, options: [])
         }
         catch {
             if error.localizedDescription.contains("no such file") {

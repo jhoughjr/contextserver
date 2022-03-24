@@ -3,11 +3,21 @@ import Foundation
 import Network
 import NIOTransportServices
 
+enum IgnoredAppOperation:Content {
+    case add
+    case remove
+}
+
+struct IgnoredAppRequest:Content {
+    let op:IgnoredAppOperation
+    let bundleID:String
+}
+
 func encode<T: Codable>(_ o: T) -> String  {
     
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .millisecondsSince1970
-    encoder.outputFormatting = [.prettyPrinted]
+    encoder.outputFormatting = [.prettyPrinted,.withoutEscapingSlashes,.sortedKeys]
     if let encoded = try? encoder.encode(o),
        let jsonString = String(data: encoded, encoding: .utf8) {
         return jsonString
@@ -54,12 +64,12 @@ func routes(_ app: Application) throws {
     }
     
     app.get("leaf","welcome") { req async throws -> View in
-        let ctx = ContextEngine.shared.engineState
-        return try await req.view.render("welcome",  ["title":"Welcome to Context Engine",
-                                                      "build": Commands.ver.rawValue,
-                                                       "date":Date().formatted(date: .complete,
-                                                                               time: .complete)])
+        return try await req.view.render("welcome",  ["title" : "Welcome to Context Engine",
+                                                      "build" : Commands.ver.rawValue,
+                                                       "date" : Date().formatted(date: .complete,
+                                                                                time: .complete)])
     }
+    
     app.get("leaf","settings") { req async throws -> View in
         let ctx = ContextEngine.shared.engineSettings
         return try await req.view.render("settings",  ["title":"Engine Settings",
@@ -97,6 +107,27 @@ func routes(_ app: Application) throws {
         let coded = encode(res)
         req.logger.debug("\(coded)")
         return coded
+    }
+    
+    app.post("json","settings","ignoredApps") { req -> String in
+        let ignoreOp = try req.content.decode(IgnoredAppRequest.self)
+        switch ignoreOp.op {
+        case .add:
+            ContextEngine.shared.ignoredBundleIDs.append(ignoreOp.bundleID)
+        case .remove:
+            if let i = ContextEngine.shared.ignoredBundleIDs.firstIndex(of: ignoreOp.bundleID) {
+                ContextEngine.shared.ignoredBundleIDs.remove(at: i)
+            }
+        }
+        return encode(ContextEngine.shared.ignoredBundleIDs)
+    }
+    
+    app.get("json","unhandledApps") { req -> String in
+        encode(Scripts.unhandledAppIDs)
+    }
+    
+    app.get("json","settings") { req -> String in
+        encode(ContextEngine.shared.engineSettings)
     }
     
     app.get("json","currentObservation") { req -> String in
