@@ -32,11 +32,11 @@ class EngineTimeRecorder {
     internal var vaporApp:Vapor.Application?
 
     static let shared = EngineTimeRecorder()
-    public var updatePoint:UpdatePoint = .immediately
+    public var updatePoint:UpdatePoint = .onSwitch //when to record
     
     public enum UpdatePoint {
-        case onSwitch // always updated on switch
-        case immediately // updates on switch and every second
+        case onSwitch // updated on switch, current app time will lead db
+        case immediately //every second
     }
     
     public func switched(app:String,time:Double) {
@@ -57,17 +57,15 @@ class EngineTimeRecorder {
     
     public func recordTime(app:String, seconds:Double) async throws {
         
-        vaporApp?.logger.info("recording time \(seconds) for \(app)")
+        vaporApp?.logger.info("recording for \(app)")
 
         if let times = vaporApp?.mongoDB["times"] {
 
             if let oldtimes = try? await times.findOne(["source":"me"]).get() {
                 
-                vaporApp?.logger.info("\(oldtimes)")
                 var newDoc = Document()
                 newDoc["source"] = "me"
                 newDoc["id"] = oldtimes["id"]
-                var previous = oldtimes[app] as? Double
                 
                 for f in oldtimes {
                     if f.0 != "source" {
@@ -75,25 +73,24 @@ class EngineTimeRecorder {
                     }
                 }
                 
+                let previous = oldtimes[app] as? Double
                 if let p = previous {
-                newDoc[app] = seconds + p
+                    newDoc[app] = seconds + p
                 }else {
                     newDoc[app] = seconds
                 }
                 
-                
                 let reply = try await times.upsert(newDoc, where: ["source":"me"]).get()
-                vaporApp?.logger.info("\(reply)")
-                EngineTimer.shared.appTimes[app] = 0
+                vaporApp?.logger.debug("\(reply)")
+                EngineTimer.shared.appTimes[app] = 0 // crucial
 
             }else {
                 vaporApp?.logger.info("no match for times.findOne([\"source\":\"me\"]) ")
                 var newDoc = Document()
                 newDoc["source"] = "me"
-                
                 newDoc[app] = seconds
                 let reply = try await times.insert(newDoc).get()
-                vaporApp?.logger.info("\(reply)")
+                vaporApp?.logger.debug("\(reply)")
             }
         }
         else {
