@@ -13,6 +13,10 @@ struct IgnoredAppRequest:Content {
     let bundleID:String
 }
 
+struct MongoConnectionStringRequest:Content {
+    let string:String
+}
+
 func encode<T: Codable>(_ o: T) -> String  {
     
     let encoder = JSONEncoder()
@@ -114,7 +118,17 @@ func routes(_ app: Application) throws {
         return coded
     }
     
+    app.post("json","settings","mongoConnectionString") { req -> String in
+        
+        let conStringReq = try req.content.decode(MongoConnectionStringRequest.self)
+        var new = EngineSettings(scriptSourceLocation: ContextEngine.shared.engineSettings.scriptSourceLocation,
+                                 mongoConnectionString: conStringReq.string)
+        
+        ContextEngine.shared.engineSettings = new
+        return encode(new)
+    }
     app.post("json","settings","ignoredApps") { req -> String in
+        
         let ignoreOp = try req.content.decode(IgnoredAppRequest.self)
         switch ignoreOp.op {
         case .add:
@@ -212,5 +226,12 @@ func routes(_ app: Application) throws {
             }
             ws.send("READY>")
         }
+        
     }
+    
+    app.logger.info("Routes online: \(app.routes.all.count)")
+    for r in app.routes.all {
+        app.logger.info("\(r)")
+    }
+    
 }

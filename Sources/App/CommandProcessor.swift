@@ -27,7 +27,7 @@ enum Commands:String, Codable, CaseIterable {
     case history
     case routes
     case times
-    case ignoredBundleIDs
+    case ignoredApps
     case unhandledApps
     
     func execute( _ args:String?) -> String {
@@ -66,7 +66,6 @@ enum Commands:String, Codable, CaseIterable {
         case .bye:
             return ""
         case .probe:
-            
             ContextEngine.shared.probeContext()
             return Commands.context.execute("")
         case .history:
@@ -81,6 +80,7 @@ enum Commands:String, Codable, CaseIterable {
                                                  "probeHistory",
                                                  "observationHistory"],
                                           "post":["setttings/validateScriptPath",
+                                                  "setttings/mongoConnectionString",
                                                   "settings/ignoredApps"]
                                          ],
                                   "leaf":["get":["welcome",
@@ -98,7 +98,17 @@ enum Commands:String, Codable, CaseIterable {
             return App.encode(EngineTimer.shared.appTimes)
         case .setMongoConnectionString:
             return "not imp \(args)"
-        case .ignoredBundleIDs:
+        case .ignoredApps:
+            if let ar = args {
+                if ar.isEmpty {
+                    return App.encode(ContextEngine.shared.ignoredBundleIDs)
+                }else {
+                    return App.encode(ContextEngine.shared.ignoredBundleIDs)
+                }
+            }else {
+                return App.encode(ContextEngine.shared.ignoredBundleIDs)
+            }
+            
             // will need to parse add | remove as well as target bundle id form string
             return "not imp \(args)"
         case .unhandledApps:
@@ -122,14 +132,15 @@ class CommandProcessor {
             ws.send("'\(commandString)' executing...") // mark execution start
             if command == .help {
                 ws.send(command.execute("") + " * Client commands are open, clr, and bye")
-            }
-            ws.send("\(command.execute(parts.dropFirst().joined(separator: " ")))") // send result
+            }else
             // local commands arent enumerated, so check here for them
             // other local commands are captured in teh webui
             // seems scattered but makes sense in situ
             if command == .bye {
                 ws.send("bye!")
                 _ = ws.close()
+            }else {
+                ws.send("\(command.execute(parts.dropFirst().joined(separator: " ")))") // send result
             }
         }else {
             ws.send("'\(commandString)' is not a command. client commands are open, clr, and bye." + Commands.help.execute(""))

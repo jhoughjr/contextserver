@@ -28,86 +28,92 @@ struct APISpec:Content {
     let type:APIType
 }
 
-class EngineTimer {
+class EngineTimeRecorder {
+    internal var vaporApp:Vapor.Application?
+
+    static let shared = EngineTimeRecorder()
+    public var updatePoint:UpdatePoint = .immediately
     
     public enum UpdatePoint {
         case onSwitch // always updated on switch
         case immediately // updates on switch and every second
     }
     
+    public func switched(app:String,time:Double) {
+        if self.updatePoint == .onSwitch {
+            Task {
+                try await self.recordTime(app: app, seconds: time)
+            }
+        }
+    }
+    
+    public func ticked(app:String, time:Double) {
+        if self.updatePoint == .immediately {
+            Task {
+                try await self.recordTime(app: app, seconds: time)
+            }
+        }
+    }
+    
+    public func recordTime(app:String, seconds:Double) async throws {
+        
+        vaporApp?.logger.info("recording time \(seconds) for \(app)")
+
+        if let times = vaporApp?.mongoDB["times"] {
+
+            if let oldtimes = try? await times.findOne(["source":"me"]).get() {
+                
+                vaporApp?.logger.info("\(oldtimes)")
+                var newDoc = Document()
+                newDoc["source"] = "me"
+                newDoc["id"] = oldtimes["id"]
+                var previous = oldtimes[app] as? Double
+                
+                for f in oldtimes {
+                    if f.0 != "source" {
+                        newDoc.appendValue(f.1, forKey: f.0)
+                    }
+                }
+                
+                if let p = previous {
+                newDoc[app] = seconds + p
+                }else {
+                    newDoc[app] = seconds
+                }
+                
+                
+                let reply = try await times.upsert(newDoc, where: ["source":"me"]).get()
+                vaporApp?.logger.info("\(reply)")
+                EngineTimer.shared.appTimes[app] = 0
+
+            }else {
+                vaporApp?.logger.info("no match for times.findOne([\"source\":\"me\"]) ")
+                var newDoc = Document()
+                newDoc["source"] = "me"
+                
+                newDoc[app] = seconds
+                let reply = try await times.insert(newDoc).get()
+                vaporApp?.logger.info("\(reply)")
+            }
+        }
+        else {
+            vaporApp?.logger.info("couldnt get times collection. check connection string.")
+        }
+    }
+}
+
+class EngineTimer {
+    
     public static let shared = EngineTimer(nil)
 
-    public var updatePoint:UpdatePoint = .onSwitch
     internal var vaporApp:Vapor.Application?
     
     public var appTimes = [String:Double]()
     
     public var timedApp = "" {
-        willSet {
-            Task {
-                try await self.recordTime()
-            }
-          
-        }
         didSet {
+            EngineTimeRecorder.shared.switched(app: timedApp, time: appTimes[timedApp] ?? 0.0)
             timeApp()
-        }
-    }
-
-    var mergeCount = 0
-    
-    func merge(times:[String:Double],
-               with doc:Document) -> Document {
-        
-        vaporApp?.logger.info("merthing \(times) with \(doc)")
-    
-        mergeCount = mergeCount + 1
-        var newTimes = Document()
-
-        if mergeCount <= 2 {
-            
-        for appTime in times {
-            if let previous = doc[appTime.key] as? Double {
-                newTimes[appTime.key] = appTime.value + previous
-            }else {
-                newTimes[appTime.key] = appTime.value
-            }
-        }
-        vaporApp?.logger.info("merged \(newTimes)")
-        }
-        return newTimes
-    }
-   
-    private func recordTime() async throws {
-        
-        vaporApp?.logger.info("recording time")
-        self.vaporApp?.logger.info("\(self.appTimes)")
-
-        if let times = vaporApp?.mongoDB["times"] {
-            
-            if let oldtimes = try await times.findOne(["source":"me"]).get() {
-                
-                vaporApp?.logger.info("previous times in mongo")
-                let merged = merge(times: self.appTimes,
-                                   with: oldtimes)
-                
-                let res = try await times.upsert( merged,
-                                                 where: ["source":"me"]).get()
-                vaporApp?.logger.info("rep \(res)")
-               
-            }else {
-                
-                var newTimes = Document()
-                newTimes["source"] = "me"
-                
-                let res = try await times.upsert( merge(times: self.appTimes,
-                                                        with: newTimes),
-                                                 where: ["source":"me"]).get()
-                vaporApp?.logger.info("new \(res)")
-            }
-            
-        }else {
-            vaporApp?.logger.info("couldnt get times collection")
         }
     }
     
@@ -124,15 +130,9 @@ class EngineTimer {
             if let t = self.appTimes[self.timedApp] {
                 self.appTimes[self.timedApp] = t + 1
             }else {
-                self.vaporApp?.logger.info("new time entry")
                 self.appTimes[self.timedApp] = 1
             }
-            
-            if self.updatePoint == .immediately {
-                Task {
-                    try await self.recordTime()
-                }
-            }
+            EngineTimeRecorder.shared.ticked(app: self.timedApp, time: self.appTimes[self.timedApp] ?? 0.0)
         }
     }
 
