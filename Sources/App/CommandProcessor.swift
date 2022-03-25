@@ -17,6 +17,7 @@ enum Commands:String, Codable, CaseIterable {
     case probe
     case help
     case setScriptSource
+    case setMongoConnectionString
     case start
     case stop
     case ver
@@ -26,8 +27,9 @@ enum Commands:String, Codable, CaseIterable {
     case history
     case routes
     case times
+    case ignoredBundleIDs
     
-    func execute() -> String {
+    func execute( _ args:String?) -> String {
         
         switch self {
 
@@ -65,7 +67,7 @@ enum Commands:String, Codable, CaseIterable {
         case .probe:
             
             ContextEngine.shared.probeContext()
-            return Commands.context.execute()
+            return Commands.context.execute("")
         case .history:
             return  App.encode(ContextEngine.shared.probeHistory.reversed())
         case .routes:
@@ -93,6 +95,12 @@ enum Commands:String, Codable, CaseIterable {
                           )
         case .times:
             return App.encode(EngineTimer.shared.appTimes)
+        case .setMongoConnectionString:
+            return "not imp \(args)"
+        case .ignoredBundleIDs:
+            // will need to parse add | remove as well as target bundle id form string
+            return "not imp \(args)"
+       
         }
     }
 }
@@ -105,13 +113,15 @@ class CommandProcessor {
                        for ws:WebSocket ) {
         
         if let command = Commands.allCases.first(where: { co in
-           return  co.rawValue == commandString
+            return commandString.contains(co.rawValue)
         }) {
-            ws.send("'\(command)' executing...") // mark execution start
+            let parts = commandString.components(separatedBy: .whitespaces)
+            
+            ws.send("'\(commandString)' executing...") // mark execution start
             if command == .help {
-                ws.send(command.execute() + " * Client commands are open, clr, and bye")
+                ws.send(command.execute("") + " * Client commands are open, clr, and bye")
             }
-            ws.send("\(command.execute())") // send result
+            ws.send("\(command.execute(parts.dropFirst().joined(separator: " ")))") // send result
             // local commands arent enumerated, so check here for them
             // other local commands are captured in teh webui
             // seems scattered but makes sense in situ
@@ -120,7 +130,7 @@ class CommandProcessor {
                 _ = ws.close()
             }
         }else {
-            ws.send("'\(commandString)' is not a command. client commands are open, clr, and bye." + Commands.help.execute())
+            ws.send("'\(commandString)' is not a command. client commands are open, clr, and bye." + Commands.help.execute(""))
         }
     }
 }

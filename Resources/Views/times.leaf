@@ -1,5 +1,5 @@
 
-#extend("master"):
+#extend("partials/master"):
     #export("content"):
           <p><h2>App TImes</h2></p>
         <div id="appTimes" display="none">

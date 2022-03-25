@@ -1,8 +1,12 @@
-#extend("master"):
+#extend("partials/master"):
     #export("content"):
         <p><h2>Context Engine History</h2></p>
         <footnote>
-            This list is reset each run of the server.
+        <pre>
+This list is reset each run of the server.
+For persistence accross runs, install MongoDB.
+Instructions <a href="https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/">here at MongoDB</a>.
+        </pre>
         </footnote>
         <div id="history" display="none">
           <pre>#(history)</pre>

@@ -20,9 +20,11 @@ h3 {
 
 input, textarea {
   background-color: #222020;
+  color:  #7bf35d;
   border: 4px;
   font-family: monospace;
   font-size: 25px;
+  resize: both;
 }
 
 button {
@@ -31,7 +33,7 @@ button {
   color:  #f3be5d;
   font-size: 25px;
   border:none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-family: monospace;
 }
 

@@ -45,6 +45,7 @@ public struct EngineState:Content {
 
 public struct EngineSettings:Codable {
     let scriptSourceLocation:String
+    let mongoConnectionString:String
 }
 
 public struct EngineState2:Codable {
@@ -77,7 +78,10 @@ public class ContextEngine: NSObject {
     
     public var observationHistory = [ContextObservation]()
     public var probeHistory = [ProbeAttempt]()
-    public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString)
+    
+    // these should be file based
+    public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString,
+                                               mongoConnectionString: "mongodb://127.0.0.1:27017/contextengine")
     public var ignoredBundleIDs = [String]()
     
     public var engineState:EngineState2? = nil

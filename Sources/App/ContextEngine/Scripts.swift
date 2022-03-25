@@ -15,7 +15,7 @@ import OSAKit
 class Scripts {
 
     // should be user configurable
-    public static var sourceLocation = URL(fileURLWithPath: "public/context-discovery/scripts/"	)
+    public static var sourceLocation =  URL(string:UserDefaults.standard.string(forKey: "scriptSourceLocation") ?? "") ?? URL(fileURLWithPath: "public/context-discovery/strategies/")
     
     public static var vaporApp:Vapor.Application? = nil
     

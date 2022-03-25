@@ -1,4 +1,4 @@
-#extend("master"):
+#extend("partials/master"):
     #export("content"):
           <h2>Websocket Command Prompt</h2>
           <pre>

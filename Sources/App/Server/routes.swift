@@ -160,7 +160,7 @@ func routes(_ app: Application) throws {
     }
     
     app.get("json","version") { req -> String in
-        encode(Commands.ver.execute())
+        encode(Commands.ver.execute(""))
     }
     
     app.get("json","unhandledApps") { req -> String in

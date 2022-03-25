@@ -1,5 +1,5 @@
 
-#extend("master"):
+#extend("partials/master"):
     #export("content"):
           <p><h2>Context Engine State</h2></p>
         <div id="state" display="none">
