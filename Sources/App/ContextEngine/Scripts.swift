@@ -44,7 +44,9 @@ class Scripts {
                 return nil
             }
         }else {
-            unhandledAppIDs.append(appID)
+            if !unhandledAppIDs.contains(appID) {
+                unhandledAppIDs.append(appID)
+            }
             return nil
         }
     }

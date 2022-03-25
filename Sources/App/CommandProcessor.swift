@@ -28,6 +28,7 @@ enum Commands:String, Codable, CaseIterable {
     case routes
     case times
     case ignoredBundleIDs
+    case unhandledApps
     
     func execute( _ args:String?) -> String {
         
@@ -100,7 +101,8 @@ enum Commands:String, Codable, CaseIterable {
         case .ignoredBundleIDs:
             // will need to parse add | remove as well as target bundle id form string
             return "not imp \(args)"
-       
+        case .unhandledApps:
+            return App.encode(Scripts.unhandledAppIDs)
         }
     }
 }
