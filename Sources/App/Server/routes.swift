@@ -100,8 +100,26 @@ func routes(_ app: Application) throws {
                                                                                time: .complete),
                                                        "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
+
+     app.get("leaf","settings","engineTimeRecorder") { req async throws -> View in
+         
+         let ctx = EngineTimeRecorder.shared.settings
+         return try await req.view.render("engineTimeRecorder",  ["title":"Engine Timer Settings",
+                                                                  "settings" : encode(ctx),
+                                                                  "date":Date().formatted(date: .complete,
+                                                                               time: .complete),
+                                                                  "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
+    }
     
     // JSON Interface
+    app.post("json","settings","timeUpdatePoint") { req -> String in
+        
+        let validation = try req.content.decode(TimeUpdatePointRequest.self)
+        EngineTimeRecorder.shared.settings.updatePoint = validation.updatePoiint
+        let coded = encode(EngineTimeRecorder.shared.settings)
+        req.logger.debug("\(coded)")
+        return coded
+    }
     
     app.post("json","settings","validateScriptPath") { req -> String in
         

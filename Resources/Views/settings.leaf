@@ -2,7 +2,7 @@
 #extend("partials/master"):
     #export("content"):
           <p><h2>Context Engine Settings</h2></p>
-        <div id="settings" display="none">
+        <div id="settings" style="display:none;">
           <pre>#(settings)</pre>
         </div>
         <p>

@@ -15,6 +15,9 @@ struct TimeCollection:Content {
     var times:[String:Double]
 }
 
+struct TimeUpdatePointRequest:Content {
+    let updatePoiint:EngineTimeRecorderSettings.UpdatePoint
+}
 enum APIType:Content {
     case webSocket
     case rest
@@ -29,18 +32,17 @@ struct APISpec:Content {
 }
 
 class EngineTimeRecorder {
+    
     internal var vaporApp:Vapor.Application?
 
     static let shared = EngineTimeRecorder()
-    public var updatePoint:UpdatePoint = .onSwitch //when to record
     
-    public enum UpdatePoint {
-        case onSwitch // updated on switch, current app time will lead db
-        case immediately //every second
-    }
+    var settings = EngineTimeRecorderSettings()
+    
+   
     
     public func switched(app:String,time:Double) {
-        if self.updatePoint == .onSwitch {
+        if self.settings.updatePoint == .onSwitch {
             Task {
                 try await self.recordTime(app: app, seconds: time)
             }
@@ -48,7 +50,7 @@ class EngineTimeRecorder {
     }
     
     public func ticked(app:String, time:Double) {
-        if self.updatePoint == .immediately {
+        if self.settings.updatePoint == .immediately {
             Task {
                 try await self.recordTime(app: app, seconds: time)
             }
@@ -92,6 +94,7 @@ class EngineTimeRecorder {
                 let reply = try await times.insert(newDoc).get()
                 vaporApp?.logger.debug("\(reply)")
             }
+            
         }
         else {
             vaporApp?.logger.info("couldnt get times collection. check connection string.")
@@ -99,6 +102,15 @@ class EngineTimeRecorder {
     }
 }
 
+struct EngineTimeRecorderSettings:Content {
+    public enum UpdatePoint:Content {
+        case onSwitch // updated on switch, current app time will lead db
+        case immediately //every second
+    }
+    
+    public var updatePoint:UpdatePoint = .onSwitch //when to record
+
+}
 class EngineTimer {
     
     public static let shared = EngineTimer(nil)

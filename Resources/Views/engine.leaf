@@ -2,15 +2,57 @@
 #extend("partials/master"):
     #export("content"):
         <p><h2>Latest Probe Attempt</h2></p>
-        <div id="status" display="none">
+        
+        <div id="status" style="display:none;">
           <pre>#(status)</pre>
         </div>
+        
+        <p style="display:inline;">
+
+            <h3>Time</h3>
+            <time>
+            <div id="timestamp">
+            </div>
+            </time>
+        </p>
+        <p style="display:inline;">
+            <h3>App</h3>
+            <div id="app">
+            </div>
+        </p>
+        <p style="display:inline;">
+            <h3>Context</h3>
+            <div id="context">
+            </div>
+        </p>
+        <p style="display:inline;">
+            <h3>Strategy</h3>
+            <div id="strategy">
+            </div>
+        </p>
+        <p style="display:inline;">
+            <div id="strategy-detail"></div>
+        </p>
         <script>
             let statusEl = document.getElementById("status");
             let stateObject = JSON.parse(statusEl.innerText);
             let pretty = JSON.stringify(stateObject, null, '\t');
             statusEl.innerHTML = "<pre>" + pretty + "</pre>";
             statusEl.setAttribute("display", "block");
+
+            let app = document.getElementById("app");
+            let context = document.getElementById("context");
+            let strategy = document.getElementById("strategy");
+
+            let strategyDetail = document.getElementById("strategy-detail");
+            let timeStamp = document.getElementById("timestamp");
+            let d = new Date(stateObject.timestamp);
+            timeStamp.innerText = d.toLocaleString() + " " + d.toUTCString();
+            app.innerText = stateObject.observation.app;
+            context.innerText = stateObject.observation.ctx;
+            strategy.innerText = stateObject.strategy;
+            strategyDetail.innerText = stateObject.script
+
         </script>
     #endexport
 #endextend
