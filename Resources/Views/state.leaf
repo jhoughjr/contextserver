@@ -2,15 +2,46 @@
 #extend("partials/master"):
     #export("content"):
           <p><h2>Context Engine State</h2></p>
-        <div id="state" display="none">
+        <div id="state" style="display:none;">
           <pre>#(state)</pre>
+        </div>
+        
+        <div id="running">
+        </div>
+
+        <h3>Launched At</h3>
+        <div id="launchedAt">
+        </div>
+
+        <h3>Observations</h3>
+        <div id="observations">
+        </div>
+        <h3>Timestamp</h3>
+        <div id="timestamp">
         </div>
         <script>
             let statusEl = document.getElementById("state");
             let stateObject = JSON.parse(statusEl.innerText);
+            let running = document.getElementById("running");
+            let timestamp = document.getElementById("timestamp");
+            let launchedAt = document.getElementById("launchedAt");
+            let observations = document.getElementById("observations");
+
             let pretty = JSON.stringify(stateObject, null, '\t');
             statusEl.innerHTML = "<pre>" + pretty + "</pre>";
-            statusEl.setAttribute("display", "block");
+
+            if (stateObject.running) {
+              running.innerHTML = "<h3 style=\"color:green;\">Running</h3>";
+              console.log("set running" + stateObject.running + " " + running);
+            }else {
+              running.innerHTML = "<h3 style=\"color:red\">Not Running</h3>";
+              console.log("set running" + stateObject.running  + " " + running);
+            }
+            let d = new Date( stateObject.launchedAt);
+            launchedAt.innerHTML = d.toLocaleString() + " " + d.toUTCString();
+            let d2 = new Date( stateObject.timestamp);
+            timestamp.innerHTML = d2.toLocaleString() + " " + d2.toUTCString();;
+            observations.innerHTML = stateObject.observations;
         </script>
     #endexport
 #endextend

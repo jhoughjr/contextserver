@@ -16,7 +16,7 @@ struct TimeCollection:Content {
 }
 
 struct TimeUpdatePointRequest:Content {
-    let updatePoiint:EngineTimeRecorderSettings.UpdatePoint
+    let updatePoint:EngineTimeRecorderSettings.UpdatePoint
 }
 enum APIType:Content {
     case webSocket
@@ -108,7 +108,7 @@ struct EngineTimeRecorderSettings:Content {
         case immediately //every second
     }
     
-    public var updatePoint:UpdatePoint = .onSwitch //when to record
+    public var updatePoint:UpdatePoint = .immediately //when to record
 
 }
 class EngineTimer {

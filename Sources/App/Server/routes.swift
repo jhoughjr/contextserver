@@ -115,7 +115,7 @@ func routes(_ app: Application) throws {
     app.post("json","settings","timeUpdatePoint") { req -> String in
         
         let validation = try req.content.decode(TimeUpdatePointRequest.self)
-        EngineTimeRecorder.shared.settings.updatePoint = validation.updatePoiint
+        EngineTimeRecorder.shared.settings.updatePoint = validation.updatePoint
         let coded = encode(EngineTimeRecorder.shared.settings)
         req.logger.debug("\(coded)")
         return coded

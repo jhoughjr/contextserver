@@ -5,7 +5,6 @@
         <div id="appTimes" display="none">
           <pre>#(appTimes)</pre>
         </div>
-          
         <script>
           
            

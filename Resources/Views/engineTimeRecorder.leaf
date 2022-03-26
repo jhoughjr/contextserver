@@ -2,14 +2,78 @@
 #extend("partials/master"):
     #export("content"):
           <p><h2>Engine Timer Settings</h2></p>
-        <div id="engineTimerSettings">
+        <div id="engineTimerSettings" style="display:none;">
           <pre>#(settings)</pre>
         </div>
-        
+
+        <p><h3>Time Update Point</h3></p>
+        <div id="updatePointPicker">
+
+          <input type="radio" id="immediate" name="updatePoint" value="immediate" onClick="clickImmed()">
+          <label for="immediate">Immediate</label>
+
+          <input type="radio" id="onSwitch" name="updatePoint" value="onSwitch" onClick="clickSwi()">
+          <label for="onSwitch">On Switch</label>
+
+        </div>
+  
         <script>
+
+           let stateObject = document.getElementById("engineTimerSettings");
+           let picker = document.getElementById("updatePointPicker");
+           let imed = document.getElementById("immediate");
+           let swi = document.getElementById("onSwitch");
+           let point = JSON.parse(stateObject.innerText);
+
+           if (point.updatePoint.onSwitch) {
+              swi.setAttribute("checked","");
+           }else if (point.updatePoint.immediately) {
+              imed.setAttribute("checked", "");
+           }
           
-           
-        </script>
+          function clickImmed() {
+            console.log("immediate");
+            // when done with req should reload
+            if (point.updatePoint.onSwitch) {
+              console.log("will set immediate from onswitch");
+              updateTime("{\"immediately\":{}}");
+           }
+          }
+
+          function clickSwi() {
+            console.log("onswitch");
+            // when done with req should reload
+             if (point.updatePoint.immediately) {
+            console.log("will set onswitch from immediate");
+            updateTime("{\"onSwitch\":{}}");
+           }
+          }
+          function updateTime(value) {
+            var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/timeUpdatePoint',
+                                    {method: 'POST',
+                                       body: '{"updatePoint":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  window.location.reload();
+                }).catch(error => {
+                  console.error(error);
+                });
+       
+          }
+             </script>
 
     #endexport
 #endextend
