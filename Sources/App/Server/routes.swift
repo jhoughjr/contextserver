@@ -3,6 +3,10 @@ import Foundation
 import Network
 import NIOTransportServices
 
+struct EngineOnOffRequest:Content {
+    let value:Int
+}
+
 enum IgnoredAppOperation:Content {
     case add
     case remove
@@ -11,6 +15,14 @@ enum IgnoredAppOperation:Content {
 struct IgnoredAppRequest:Content {
     let op:IgnoredAppOperation
     let bundleID:String
+}
+
+struct EngineTimerOnOffRequest:Content {
+    let value:Int
+}
+
+struct EngineTimeRecorderOnOffRequest:Content {
+    let value:Int
 }
 
 struct MongoConnectionStringRequest:Content {
@@ -112,7 +124,19 @@ func routes(_ app: Application) throws {
     }
     
     // JSON Interface
-    app.post("json","settings","timeUpdatePoint") { req -> String in
+    
+    app.post("json","settings","engineTimeRecorder","mongoConnectionString") { req -> String in
+        
+        let conStringReq = try req.content.decode(MongoConnectionStringRequest.self)
+        let new = EngineTimeRecorderSettings(updatePoint: EngineTimeRecorder.shared.settings.updatePoint,
+                                             mongoConnectionString: conStringReq.string)
+        
+        EngineTimeRecorder.shared.settings = new
+        return encode(new)
+    }
+    
+    // recorder
+    app.post("json","settings","engineTimeRecorder","timeUpdatePoint") { req -> String in
         
         let validation = try req.content.decode(TimeUpdatePointRequest.self)
         EngineTimeRecorder.shared.settings.updatePoint = validation.updatePoint
@@ -121,6 +145,7 @@ func routes(_ app: Application) throws {
         return coded
     }
     
+    // engine
     app.post("json","settings","validateScriptPath") { req -> String in
         
         let validation = try req.content.decode(ScriptPathValidation.self)
@@ -136,15 +161,10 @@ func routes(_ app: Application) throws {
         return coded
     }
     
-    app.post("json","settings","mongoConnectionString") { req -> String in
-        
-        let conStringReq = try req.content.decode(MongoConnectionStringRequest.self)
-        var new = EngineSettings(scriptSourceLocation: ContextEngine.shared.engineSettings.scriptSourceLocation,
-                                 mongoConnectionString: conStringReq.string)
-        
-        ContextEngine.shared.engineSettings = new
-        return encode(new)
-    }
+    
+  
+    
+    //engine
     app.post("json","settings","ignoredApps") { req -> String in
         
         let ignoreOp = try req.content.decode(IgnoredAppRequest.self)
@@ -185,6 +205,21 @@ func routes(_ app: Application) throws {
                                  ]
                          ]
                ])
+    }
+    
+    app.get("json","engine","state") { req -> String in
+        encode(ContextEngine.shared.state())
+    }
+    
+    app.post("json","engine","state") { req -> String in
+        
+        let onOff = try req.content.decode(EngineOnOffRequest.self)
+        if onOff.value == 1 {
+            ContextEngine.shared.start()
+        }else {
+            ContextEngine.shared.stop()
+        }
+        return encode(ContextEngine.shared.state())
     }
     
     app.get("json","engine") { req -> String in

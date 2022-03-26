@@ -9,7 +9,6 @@
 
 import Cocoa
 import Vapor
-
 import OSAKit
 
 class Scripts {
@@ -61,7 +60,7 @@ class Scripts {
         return ""
     }
     
-    private static func runCommand(cmd: String,
+    public static func runCommand(cmd: String,
                                    args: [String]) -> String {
         let outPipe = Pipe()
         let proc = Process()

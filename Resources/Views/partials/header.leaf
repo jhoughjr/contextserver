@@ -1,11 +1,11 @@
 <div id="Navigation">
     <button onClick="window.location.href='#(baseURL)/leaf/engine'">
-        Current
+        Latest
     </button>
-        <button onClick="window.location.href='#(baseURL)/leaf/history'">
+    <button onClick="window.location.href='#(baseURL)/leaf/history'">
         History
     </button>
-        <button onClick="window.location.href='#(baseURL)/leaf/state'">
+    <button onClick="window.location.href='#(baseURL)/leaf/state'">
         State
     </button>
     <button onClick="window.location.href='#(baseURL)/leaf/settings'">

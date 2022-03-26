@@ -103,18 +103,24 @@ class EngineTimeRecorder {
 }
 
 struct EngineTimeRecorderSettings:Content {
+    
     public enum UpdatePoint:Content {
         case onSwitch // updated on switch, current app time will lead db
         case immediately //every second
     }
     
     public var updatePoint:UpdatePoint = .immediately //when to record
-
+    // should pull from storage or env or something central
+    public var mongoConnectionString:String = "mongodb://127.0.0.1:27017/contextengine"
+    public var isRecording = true
 }
+
 class EngineTimer {
     
     public static let shared = EngineTimer(nil)
 
+    public var isTiming = true
+    
     internal var vaporApp:Vapor.Application?
     
     public var appTimes = [String:Double]()

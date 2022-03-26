@@ -2,11 +2,35 @@
 #extend("partials/master"):
     #export("content"):
           <p><h2>Engine Timer Settings</h2></p>
-        <div id="engineTimerSettings" style="display:none;">
+        <div id="engineTimerSettings" style="display:inline;">
           <pre>#(settings)</pre>
         </div>
 
-        <p><h3>Time Update Point</h3></p>
+
+        <!--on engineTimer -->
+        <p>
+          <div id="timing" style="display:inline-block;">
+          Timing
+          </div>
+
+          <label class="switch" style="display:inline-block;">
+            <input type="checkbox" id="onOff" style="display:inline-block;">
+            <span class="slider round"></span>
+          </label>
+        </p>
+        <!--on engineTimeRecorder -->
+        <p>
+          <div id="recording" style="display:inline-block;">
+          Recording
+          </div>
+
+          <label class="switch" style="display:inline-block;">
+            <input type="checkbox" id="onOff" style="display:inline-block;">
+            <span class="slider round"></span>
+          </label>
+        </p>
+
+        <p><h3>Time Record Point</h3></p>
         <div id="updatePointPicker">
 
           <input type="radio" id="immediate" name="updatePoint" value="immediate" onClick="clickImmed()">
@@ -16,25 +40,39 @@
           <label for="onSwitch">On Switch</label>
 
         </div>
-  
+
+         <p>
+         <h3>MongoDB Connection String</h3>
+         </p>
+         <p style="display:inline-block;">
+        <input type="text" size="64" accept="public.url" id="connectionString" name="connectionString">
+        <button onClick="changeConnectionString();" title="Configures the MongoDB to use.">Change</button><div style="display:inline-block;" id="validSign"></div>
+        </p>
+
         <script>
 
-           let stateObject = document.getElementById("engineTimerSettings");
-           let picker = document.getElementById("updatePointPicker");
+           let stateObject = JSON.parse(document.getElementById("engineTimerSettings").innerText);
+
+           let updatePicker = document.getElementById("updatePointPicker");
            let imed = document.getElementById("immediate");
            let swi = document.getElementById("onSwitch");
-           let point = JSON.parse(stateObject.innerText);
 
-           if (point.updatePoint.onSwitch) {
+           let point = stateObject.updatePoint;
+
+           let connectionStringPicker = document.getElementById("connectionString");
+          console.log(stateObject);
+
+           connectionStringPicker.value = stateObject.mongoConnectionString;
+           if (point.onSwitch) {
               swi.setAttribute("checked","");
-           }else if (point.updatePoint.immediately) {
+           }else if (point.immediately) {
               imed.setAttribute("checked", "");
            }
           
           function clickImmed() {
             console.log("immediate");
             // when done with req should reload
-            if (point.updatePoint.onSwitch) {
+            if (point.onSwitch) {
               console.log("will set immediate from onswitch");
               updateTime("{\"immediately\":{}}");
            }
@@ -43,11 +81,12 @@
           function clickSwi() {
             console.log("onswitch");
             // when done with req should reload
-             if (point.updatePoint.immediately) {
+             if (point.immediately) {
             console.log("will set onswitch from immediate");
             updateTime("{\"onSwitch\":{}}");
            }
           }
+
           function updateTime(value) {
             var myHeaders = new Headers();
               myHeaders.append('Content-Type', 'application/json');
@@ -73,7 +112,36 @@
                 });
        
           }
-             </script>
+
+           function changeConnectionString() {
+           var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/changeConnectionString',
+                                    {method: 'POST',
+                                    body: '{"value":"' + connectionStringPicker.value + '"}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  if (response.isValid) {
+                    document.getElementById("validSign").innerText = "Accepted"
+                  }else {
+                    document.getElementById("validSign").innerText = "Not Accepted"
+                  }
+                }).catch(error => {
+                  console.error(error);
+                });
+          }
+          </script>
 
     #endexport
 #endextend
