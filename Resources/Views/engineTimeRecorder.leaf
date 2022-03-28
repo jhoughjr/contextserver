@@ -30,17 +30,6 @@
           </label>
         </p>
 
-        <p><h3>Time Record Point</h3></p>
-        <div id="updatePointPicker">
-
-          <input type="radio" id="immediate" name="updatePoint" value="immediate" onClick="clickImmed()">
-          <label for="immediate">Immediate</label>
-
-          <input type="radio" id="onSwitch" name="updatePoint" value="onSwitch" onClick="clickSwi()">
-          <label for="onSwitch">On Switch</label>
-
-        </div>
-
          <p>
          <h3>MongoDB Connection String</h3>
          </p>
@@ -56,7 +45,6 @@
           console.log(stateObject);
 
           // get document parts
-           let updatePicker = document.getElementById("updatePointPicker");
            let imed = document.getElementById("immediate");
            let swi = document.getElementById("onSwitch");
            let connectionStringPicker = document.getElementById("connectionString");
@@ -81,15 +69,6 @@
           else {
             timingOnOff.removeAttribute("checked");
           }
-
-          let point = stateObject.recorder.updatePoint;
-          if (point.onSwitch) {
-            swi.setAttribute("checked","");
-          }else if (point.immediately) {
-            imed.setAttribute("checked", "");
-          }
-          
-
           // add event listeners
           recordingOnOff.addEventListener('change', toggleRecordOnOff);
           timingOnOff.addEventListener('change', toggleTimerOnOff);
