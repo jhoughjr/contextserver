@@ -69,6 +69,8 @@ public func configure(_ app: Application) throws {
         app.logger.warning("Can't connect to MongoDB. No persistence :(")
     }
     
+    app.leaf.tags["pdate"] = PrettyDateTag() as? LeafTag
+
     try routes(app)
     app.logger.info("Routes installed.")
     app.lifecycle.use(EngineLifeCycle())

@@ -9,16 +9,18 @@ import Vapor
 
 struct EngineLifeCycle: LifecycleHandler {
 
-    func willBoot(_ app: Application) throws {
-        EngineTimeRecorder.shared.vaporApp = app
-        Scripts.vaporApp = app
-        ContextEngine.shared.vaporApp = app
+    func didBoot(_ app: Application) throws {
         
-        ContextEngine.shared.probeContext()
+        Scripts.vaporApp = app
+        EngineTimeRecorder.shared.vaporApp = app
+        _ = ContextEngine.init(app: app)
         EngineTimer.shared.vaporApp = app
-        app.logger.info("Context Engine ready.")
+        
+        app.logger.info("Context Engine Booted.")
+        ContextEngine.shared.start()
         
     }
+    
     func shutdown(_ application: Application) {
         ContextEngine.shared.stop()
     }

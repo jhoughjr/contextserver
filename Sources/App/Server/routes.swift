@@ -3,32 +3,6 @@ import Foundation
 import Network
 import NIOTransportServices
 
-struct EngineOnOffRequest:Content {
-    let value:Int
-}
-
-enum IgnoredAppOperation:Content {
-    case add
-    case remove
-}
-
-struct IgnoredAppRequest:Content {
-    let op:IgnoredAppOperation
-    let bundleID:String
-}
-
-struct EngineTimerOnOffRequest:Content {
-    let value:Int
-}
-
-struct EngineTimeRecorderOnOffRequest:Content {
-    let value:Int
-}
-
-struct MongoConnectionStringRequest:Content {
-    let string:String
-}
-
 func encode<T: Codable>(_ o: T) -> String  {
     
     let encoder = JSONEncoder()
@@ -42,6 +16,25 @@ func encode<T: Codable>(_ o: T) -> String  {
     }
 }
 
+import Leaf
+struct PrettyDateTag: LeafTag {
+
+    func render(_ ctx: LeafContext) throws -> LeafData {
+        struct NowTagError: Error {}
+
+        switch ctx.parameters.count {
+        case 1:
+            guard let date = ctx.parameters[0].string else {
+                throw NowTagError()
+            }
+        default:
+            throw NowTagError()
+        }
+        let date = Date(timeIntervalSince1970: ctx.parameters.first?.double ?? 0.0)
+        let dateAsString = date.formatted(date: .numeric, time: .complete)
+        return LeafData.string(dateAsString)
+    }
+}
 
 func routes(_ app: Application) throws {
     
@@ -67,11 +60,21 @@ func routes(_ app: Application) throws {
             a.timestamp > b.timestamp
         }
         
-        return try await req.view.render("history", ["title":"Engine History",
-                                                     "history" : encode(ctx),
-                                                     "date":Date().formatted(date: .complete,
-                                                                             time: .complete),
-                                                     "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
+        struct Foo:Encodable {
+            let title:String
+            let jsonHistory:String
+            let history:[ProbeAttempt]
+            let date:String
+            let baseURL:String
+        }
+        
+        return try await req.view.render("history", Foo(title: "Probe History",
+                                                        jsonHistory: "",
+                                                        history: ctx,
+                                                        date: Date().formatted(date: .complete,
+                                                                               time: .complete),
+                                                        baseURL: "http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"))
+
     }
     
     app.get("leaf","state") { req async throws -> View in
@@ -90,40 +93,104 @@ func routes(_ app: Application) throws {
                                                                                 time: .complete),
                                                       "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
+    
     app.get("leaf","times") { req async throws -> View in
         
         let times = EngineTimer.shared.appTimes.map { f in
-            return [f.key:"\(f.value)"]
+            return AppTime(app: f.key, seconds: f.value)
         }
         
-        return try await req.view.render("times",  ["title" : "Context Engine App Times",
-                                                      "build" : Commands.ver.rawValue,
-                                                       "date" : Date().formatted(date: .complete,
-                                                                                time: .complete),
-                                                      "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)",
-                                                    "appTimes":App.encode(times)])
+        struct AppTime:Content {
+            let app:String
+            let seconds:Double
+        }
+        
+        struct AppTimesLeaf:Encodable {
+            let title:String
+            let appTimes:[AppTime]
+            let date:String
+            let baseURL:String
+            let build:String
+        }
+        
+        let ctx = AppTimesLeaf(title: "Context Engine App Times",
+                               appTimes:  times ,
+                               date: Date().formatted(date: .complete,
+                                                      time: .complete),
+                               baseURL: "http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)",
+                               build:Commands.ver.rawValue)
+        
+        return try await req.view.render("times",  ctx)
     }
     
     app.get("leaf","settings") { req async throws -> View in
         let ctx = ContextEngine.shared.engineSettings
+        
         return try await req.view.render("settings",  ["title":"Engine Settings",
                                                        "settings" : encode(ctx),
                                                        "date":Date().formatted(date: .complete,
                                                                                time: .complete),
                                                        "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
     }
-
-     app.get("leaf","settings","engineTimeRecorder") { req async throws -> View in
-         
-         let ctx = EngineTimeRecorder.shared.settings
-         return try await req.view.render("engineTimeRecorder",  ["title":"Engine Timer Settings",
-                                                                  "settings" : encode(ctx),
-                                                                  "date":Date().formatted(date: .complete,
-                                                                               time: .complete),
-                                                                  "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
-    }
+  
+    app.get("leaf","settings","engineTimeRecorder") { req async throws -> View in
+        struct TimerRecSettings:Content {
+            let recorder:EngineTimeRecorderSettings
+            let timer:EngineTimerSettings
+        }
+        let ctx = EngineTimeRecorder.shared.settings
+        let ctx2 = EngineTimer.shared.settings
+        let set = TimerRecSettings(recorder: ctx,
+                                timer: ctx2)
+        
+        
+        return try await req.view.render("engineTimeRecorder",  ["title":"Engine Timer Settings",
+                                                                "settings" : encode(set),
+                                                                "date":Date().formatted(date: .complete,
+                                                                                        time: .complete),
+                                                                "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
+}
     
     // JSON Interface
+    
+    // timer
+    app.get("json","times") { req -> String in
+        encode(EngineTimer.shared.appTimes)
+    }
+    
+    app.get("json","settings","engineTimer") { req -> String in
+        encode(EngineTimer.shared.settings)
+    }
+    
+    app.post("json","settings","engineTimer","isTiming") { req -> String in
+        
+        let onOffReq = try req.content.decode(EngineTimerOnOffRequest.self)
+        let new = EngineTimerSettings(isTiming: onOffReq.isTiming)
+        
+        EngineTimer.shared.settings = new
+        return encode(new)
+    }
+    
+    // recorder
+    app.get("json","settings","engineTimeRecorder") { req -> String in
+        encode(EngineTimeRecorder.shared.settings)
+    }
+    
+    app.post("json","settings","engineTimeRecorder","isRecording") { req -> String in
+        
+        let onOffReq = try req.content.decode(EngineTimeRecorderOnOffRequest.self)
+        let new = EngineTimeRecorderSettings(updatePoint: EngineTimeRecorder.shared.settings.updatePoint,
+                                             mongoConnectionString: EngineTimeRecorder.shared.settings.mongoConnectionString,
+                                             isRecording: onOffReq.isRecording)
+        
+        if onOffReq.isRecording {
+            if !EngineTimer.shared.settings.isTiming {
+                EngineTimer.shared.settings.isTiming = true
+            }
+        }
+        EngineTimeRecorder.shared.settings = new
+        return encode(new)
+    }
     
     app.post("json","settings","engineTimeRecorder","mongoConnectionString") { req -> String in
         
@@ -135,7 +202,6 @@ func routes(_ app: Application) throws {
         return encode(new)
     }
     
-    // recorder
     app.post("json","settings","engineTimeRecorder","timeUpdatePoint") { req -> String in
         
         let validation = try req.content.decode(TimeUpdatePointRequest.self)
@@ -146,7 +212,7 @@ func routes(_ app: Application) throws {
     }
     
     // engine
-    app.post("json","settings","validateScriptPath") { req -> String in
+    app.post("json","settings","engine","validateScriptPath") { req -> String in
         
         let validation = try req.content.decode(ScriptPathValidation.self)
         let res = try await ContextEngine.shared.isValidScriptPath(validation)
@@ -161,11 +227,7 @@ func routes(_ app: Application) throws {
         return coded
     }
     
-    
-  
-    
-    //engine
-    app.post("json","settings","ignoredApps") { req -> String in
+    app.post("json","settings","engine","ignoredApps") { req -> String in
         
         let ignoreOp = try req.content.decode(IgnoredAppRequest.self)
         switch ignoreOp.op {
@@ -179,10 +241,42 @@ func routes(_ app: Application) throws {
         return encode(ContextEngine.shared.ignoredBundleIDs)
     }
     
-    app.get("json","times") { req -> String in
-        encode(EngineTimer.shared.appTimes)
+    app.get("json","engine","state") { req -> String in
+        encode(ContextEngine.shared.state())
+    }
+
+    app.post("json","engine","state") { req -> String in
+        
+        let onOff = try req.content.decode(EngineOnOffRequest.self)
+        if onOff.value == 1 {
+            ContextEngine.shared.start()
+        }else {
+            ContextEngine.shared.stop()
+        }
+        return encode(ContextEngine.shared.state())
     }
     
+    app.get("json","engine","unhandledApps") { req -> String in
+        encode(Scripts.unhandledAppIDs)
+    }
+
+    app.get("json","settings","engine") { req -> String in
+        encode(ContextEngine.shared.engineSettings)
+    }
+
+    app.get("json","currentObservation") { req -> String in
+        encode(ContextEngine.shared.currentObservation())
+    }
+
+    app.get("json","probeHistory") { req -> String in
+        encode(ContextEngine.shared.probeHistory)
+    }
+
+    app.get("json","observationHistory") { req -> String in
+        encode(ContextEngine.shared.observationHistory)
+    }
+    
+    // server
     app.get("json","routes") { req -> String in
         encode(["routes":["json":["get":["engine",
                                          "version",
@@ -206,48 +300,10 @@ func routes(_ app: Application) throws {
                          ]
                ])
     }
-    
-    app.get("json","engine","state") { req -> String in
-        encode(ContextEngine.shared.state())
-    }
-    
-    app.post("json","engine","state") { req -> String in
-        
-        let onOff = try req.content.decode(EngineOnOffRequest.self)
-        if onOff.value == 1 {
-            ContextEngine.shared.start()
-        }else {
-            ContextEngine.shared.stop()
-        }
-        return encode(ContextEngine.shared.state())
-    }
-    
-    app.get("json","engine") { req -> String in
-        encode(ContextEngine.shared.state())
-    }
-    
+
+    // server
     app.get("json","version") { req -> String in
         encode(Commands.ver.execute(""))
-    }
-    
-    app.get("json","unhandledApps") { req -> String in
-        encode(Scripts.unhandledAppIDs)
-    }
-    
-    app.get("json","settings") { req -> String in
-        encode(ContextEngine.shared.engineSettings)
-    }
-    
-    app.get("json","currentObservation") { req -> String in
-        encode(ContextEngine.shared.currentObservation())
-    }
-    
-    app.get("json","probeHistory") { req -> String in
-        encode(ContextEngine.shared.probeHistory)
-    }
-    
-    app.get("json","observationHistory") { req -> String in
-        encode(ContextEngine.shared.observationHistory)
     }
     
     // Websocket Interface

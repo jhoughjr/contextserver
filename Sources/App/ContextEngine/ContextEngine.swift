@@ -9,20 +9,27 @@ import AppKit
 import Vapor
 import MongoKitten
 
-public struct StrategyFile:Content {
-    let strategies:[DiscoveryStratgeySpec]
+struct EngineOnOffRequest:Content {
+    let value:Int
 }
 
-public struct DiscoveryStratgeySpec:Content {
+// used in IgnoredAppRequest
+enum IgnoredAppOperation:Content {
+    case add
+    case remove
+}
+
+struct IgnoredAppRequest:Content {
+    let op:IgnoredAppOperation
     let bundleID:String
-    let startegy:ContextDiscoveryStrategy
 }
 
-public enum ContextDiscoveryStrategy:String,Content {
+public enum ContextDiscoveryStrategy:String, Content {
     case script
     case api
 }
 
+// used in probeHistory
 public struct ProbeAttempt:Content {
     let timestamp:Date
     let strategy:ContextDiscoveryStrategy
@@ -30,6 +37,7 @@ public struct ProbeAttempt:Content {
     let observation:ContextObservation
 }
 
+// what we're here fore
 public struct ContextObservation:Content {
     let timestamp:Date
     let app:String
@@ -37,14 +45,16 @@ public struct ContextObservation:Content {
     let origin:String
 }
 
+// things the engine needs
+public struct EngineSettings:Codable {
+    let scriptSourceLocation:String
+}
+
+//
 public struct EngineState:Content {
     let engineSettings:EngineSettings
     let currentObservation:ContextObservation
     let history:[ContextObservation]
-}
-
-public struct EngineSettings:Codable {
-    let scriptSourceLocation:String
 }
 
 public struct EngineState2:Codable {
@@ -70,6 +80,10 @@ public class ContextEngine: NSObject {
     
     public static let shared = ContextEngine(app:nil)
     
+    init(app:Vapor.Application) {
+        ContextEngine.shared.vaporApp = app
+    }
+    
     public var vaporApp:Application?
 
     private var currentAppId = ""
@@ -79,14 +93,22 @@ public class ContextEngine: NSObject {
     public var probeHistory = [ProbeAttempt]()
     
     // these should be file based
-    public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString)
+    public var engineSettings = EngineSettings(scriptSourceLocation: Scripts.sourceLocation.absoluteString) {
+        didSet {
+            vaporApp?.logger.info("[ENGINE] settings update \(engineSettings)")
+        }
+    }
+    
     public var ignoredBundleIDs = [String]()
     
-    public var engineState:EngineState2? = nil
+    public var engineState:EngineState2? = nil {
+        didSet {
+            vaporApp?.logger.info("[ENGINE] state update \(engineState)")
+        }
+    }
     
     public func isValidScriptPath(_ p:ScriptPathValidation) async throws -> ScriptPathValidationResult {
         ScriptPathValidationResult(isValid:directoryExistsAtPath(p.path))
-
     }
     
     fileprivate func directoryExistsAtPath(_ path: String) -> Bool {
@@ -123,15 +145,16 @@ public class ContextEngine: NSObject {
     
     public func currentObservation() -> ContextObservation {
         
-        let o = ContextObservation(timestamp: Date(), app: currentAppId,
+        let o = ContextObservation(timestamp: Date(),
+                                   app: currentAppId,
                                    ctx: currentContextId,
-                                   origin: "\(vaporApp!.http.server.configuration.address)" )
-        vaporApp?.logger.debug("[ENGINE] observed: \(o)")
+                                   origin: "\(vaporApp?.http.server.configuration.address)" )
+        vaporApp?.logger.info("[ENGINE] observed: \(o)")
         return o
     }
         
     public func probeContext() {
-        vaporApp?.logger.debug("probing...")
+        vaporApp?.logger.info("[ENGINE] probing...")
 
         let s = strategy(for: currentAppId)
         
@@ -139,7 +162,7 @@ public class ContextEngine: NSObject {
         case .script:
             currentContextId = Scripts.resultOfScript(for: currentAppId)
         case .api:
-            vaporApp?.logger.warning("\(s) not implemented for any apps yet.")
+            vaporApp?.logger.warning("[ENGINE] \(s) not implemented for any apps yet.")
             currentContextId = Scripts.resultOfScript(for: currentAppId)
         }
         
@@ -147,7 +170,6 @@ public class ContextEngine: NSObject {
         
         observationHistory.append(observation)
         
-        // after probe see if changed if so notify
         probeHistory.append(ProbeAttempt(timestamp:Date(),
                                          strategy: s,
                                          script:Scripts.script(for: observation.app)?.source ?? "",
@@ -165,7 +187,7 @@ public class ContextEngine: NSObject {
             if last.app == nextToLast.app && nextToLast.ctx == last.ctx {
                 notifyClients()
             }else {
-                vaporApp?.logger.info("no change")
+                vaporApp?.logger.info("[ENGINE]  no change")
             }
         }
     }
@@ -195,38 +217,50 @@ public class ContextEngine: NSObject {
     private var obs:NSKeyValueObservation?
   
     public func startObservingMenubarOwner() {
-        vaporApp?.logger.info("Starting observation for \\.menuBarOwningApplication ...")
+        
+        vaporApp?.logger.info("[ENGINE] Starting observation for \\.menuBarOwningApplication ...")
         obs = NSWorkspace.shared.observe(\.menuBarOwningApplication,
                                               options: [.new]) {[weak self] ws, change in
             
             if let bundleID = change.newValue??.bundleIdentifier {
                 
-                self?.vaporApp?.logger.info("app changed to \(bundleID)")
+                self?.vaporApp?.logger.info("[ENGINE] app changed to \(bundleID)")
                 self?.currentAppId = bundleID
                 EngineTimer.shared.timedApp = bundleID
                 self?.probeContext()
             }
         }
+        
+        if let bundleID = NSWorkspace.shared.menuBarOwningApplication?.bundleIdentifier {
+            currentAppId = bundleID
+            probeContext()
+        }
     }
 
     public func stopObservingMenubarOwner() {
+        currentAppId = ""
+        currentContextId = ""
         obs = nil
+        vaporApp?.logger.info("[ENGINE] stopped observing.")
     }
     
     public func start() {
         
-        EngineTimer.shared.timedApp =  NSWorkspace.shared.menuBarOwningApplication?.bundleIdentifier ?? ""
         
         startObservingMenubarOwner()
         engineState = EngineState2(launchedAt: Date(),
                                    timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: true)
+        EngineTimer.shared.timedApp =  NSWorkspace.shared.menuBarOwningApplication?.bundleIdentifier ?? ""
+
+        vaporApp?.logger.info("[ENGINE] started.")
+
     }
     
     public func stop() {
-        obs = nil
         EngineTimer.shared.timedApp = ""
+        stopObservingMenubarOwner()
         engineState = EngineState2(launchedAt: engineState?.launchedAt, timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: false)

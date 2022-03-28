@@ -2,7 +2,7 @@
 #extend("partials/master"):
     #export("content"):
           <p><h2>Engine Timer Settings</h2></p>
-        <div id="engineTimerSettings" style="display:inline;">
+        <div id="engineTimerSettings" style="display:none;">
           <pre>#(settings)</pre>
         </div>
 
@@ -14,7 +14,7 @@
           </div>
 
           <label class="switch" style="display:inline-block;">
-            <input type="checkbox" id="onOff" style="display:inline-block;">
+            <input type="checkbox" id="timingonOff" style="display:inline-block;">
             <span class="slider round"></span>
           </label>
         </p>
@@ -25,7 +25,7 @@
           </div>
 
           <label class="switch" style="display:inline-block;">
-            <input type="checkbox" id="onOff" style="display:inline-block;">
+            <input type="checkbox" id="recordingonOff" style="display:inline-block;">
             <span class="slider round"></span>
           </label>
         </p>
@@ -50,25 +50,76 @@
         </p>
 
         <script>
-
+          
+          // get state
            let stateObject = JSON.parse(document.getElementById("engineTimerSettings").innerText);
+          console.log(stateObject);
 
+          // get document parts
            let updatePicker = document.getElementById("updatePointPicker");
            let imed = document.getElementById("immediate");
            let swi = document.getElementById("onSwitch");
-
-           let point = stateObject.updatePoint;
-
            let connectionStringPicker = document.getElementById("connectionString");
-          console.log(stateObject);
 
-           connectionStringPicker.value = stateObject.mongoConnectionString;
-           if (point.onSwitch) {
-              swi.setAttribute("checked","");
-           }else if (point.immediately) {
-              imed.setAttribute("checked", "");
-           }
+           let recordingOnOff = document.getElementById("recordingonOff");
+           let timingOnOff = document.getElementById("timingonOff");
+
+
+          // apply state to ui
+           connectionStringPicker.value = stateObject.recorder.mongoConnectionString;
+           
+          if (stateObject.recorder.isRecording) {
+            recordingonOff.setAttribute("checked","");
+          }
+          else {
+            recordingonOff.removeAttribute("checked");
+          }
+
+          if (stateObject.timer.isTiming) {
+            timingonOff.setAttribute("checked","");
+          }
+          else {
+            timingOnOff.removeAttribute("checked");
+          }
+
+          let point = stateObject.recorder.updatePoint;
+          if (point.onSwitch) {
+            swi.setAttribute("checked","");
+          }else if (point.immediately) {
+            imed.setAttribute("checked", "");
+          }
           
+
+          // add event listeners
+          recordingOnOff.addEventListener('change', toggleRecordOnOff);
+          timingOnOff.addEventListener('change', toggleTimerOnOff);
+
+          function toggleTimerOnOff() {
+             if (stateObject.timer.isTiming) {
+                timing(false);
+                console.log("will toggle false");
+
+              }else {
+                timing(true);
+                console.log("will toggle true");
+
+              }
+          }
+
+          function toggleRecordOnOff() {
+            
+             if (stateObject.recorder.isRecording) {
+
+                recording(false);
+                console.log("will toggle false");
+            }else {
+                recording(true);
+                console.log("will toggle true");
+
+            }
+          }
+
+          // radio toggles
           function clickImmed() {
             console.log("immediate");
             // when done with req should reload
@@ -78,6 +129,7 @@
            }
           }
 
+          // radio toggles
           function clickSwi() {
             console.log("onswitch");
             // when done with req should reload
@@ -91,7 +143,7 @@
             var myHeaders = new Headers();
               myHeaders.append('Content-Type', 'application/json');
 
-              const request = new Request('http://localhost:8080/json/settings/timeUpdatePoint',
+              const request = new Request('http://localhost:8080/json/settings/engineTimeRecorder/timeUpdatePoint',
                                     {method: 'POST',
                                        body: '{"updatePoint":' + value + '}',
                                     headers: myHeaders}
@@ -99,6 +151,7 @@
               fetch(request)
                 .then(response => {
                   if (response.status === 200) {
+
                     return response.json();
                   } else {
                     throw new Error('Something went wrong on api server!');
@@ -113,13 +166,14 @@
        
           }
 
-           function changeConnectionString() {
+          // onClick
+          function changeConnectionString() {
            var myHeaders = new Headers();
               myHeaders.append('Content-Type', 'application/json');
 
-              const request = new Request('http://localhost:8080/json/settings/changeConnectionString',
+              const request = new Request('http://localhost:8080/json/settings/engineTimeRecorder/mongoConnectionString',
                                     {method: 'POST',
-                                    body: '{"value":"' + connectionStringPicker.value + '"}',
+                                    body: '{"string":"' + connectionStringPicker.value + '"}',
                                     headers: myHeaders}
                                     );
               fetch(request)
@@ -132,13 +186,62 @@
                 })
                 .then(response => {
                   console.debug(response);
-                  if (response.isValid) {
-                    document.getElementById("validSign").innerText = "Accepted"
-                  }else {
-                    document.getElementById("validSign").innerText = "Not Accepted"
-                  }
+                  document.getElementById("validSign").innerText = "Accepted";
                 }).catch(error => {
                   console.error(error);
+                  document.getElementById("validSign").innerText = "Not Accepted"
+                });
+          }
+
+          function timing(value) {
+              var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/engineTimer/isTiming',
+                                    {method: 'POST',
+                                    body: '{"isTiming":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  document.getElementById("validSign").innerText = "Accepted";
+                }).catch(error => {
+                  console.error(error);
+                  document.getElementById("validSign").innerText = "Not Accepted"
+                });
+          }
+
+          function recording(value) {
+            var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/engineTimeRecorder/isRecording',
+                                    {method: 'POST',
+                                    body: '{"isRecording":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  document.getElementById("validSign").innerText = "Accepted";
+                }).catch(error => {
+                  console.error(error);
+                  document.getElementById("validSign").innerText = "Not Accepted"
                 });
           }
           </script>

@@ -38,7 +38,7 @@ button {
 }
 
 .dark-mode {
-  background-color: black;
+  background-color: rgb(15, 14, 14);
   color: #f3be5d;
 }
 
@@ -103,4 +103,7 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+table, th, td {
+  border: 1px solid #f3be5d;
 }

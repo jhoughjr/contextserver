@@ -11,7 +11,10 @@
     <button onClick="window.location.href='#(baseURL)/leaf/settings'">
         Settings
     </button>
-        <button onClick="window.location.href='#(baseURL)/leaf/settings/engineTimeRecorder'">
+    <button onClick="window.location.href='#(baseURL)/leaf/times'">
+        Timer 
+    </button>
+    <button onClick="window.location.href='#(baseURL)/leaf/settings/engineTimeRecorder'">
         Timer Settings
     </button>
     <button onClick="window.location.href='#(baseURL)/leaf/websocketprompt'">

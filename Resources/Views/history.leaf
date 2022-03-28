@@ -1,22 +1,61 @@
 #extend("partials/master"):
     #export("content"):
         <p><h2>Context Engine History</h2></p>
-        <footnote>
+
         <pre>
 This list is reset each run of the server.
 For persistence accross runs, install MongoDB.
+Then enter your connection string and enable recording in Timer Settings.
 Instructions <a href="https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/">here at MongoDB</a>.
         </pre>
-        </footnote>
-        <div id="history" display="none">
-          <pre>#(history)</pre>
+       
+       <p>
+        <div id="formatted">
+            <table border=1 cellpadding=8 cellspacing=8>
+            <thead>
+            <tr>
+                <th colspan="4">Probe Attempts</th>
+            </tr>
+            <tr>
+                <th>Time</th>
+                <th>Observation</th>
+                <th>Strategy</th>
+                <th>Strategy Implementation</th>
+            </tr>
+            </thead>
+            <tbody>
+             #for(friend in history):
+                <tr>
+                    <td>#pdate(friend.timestamp)</td>
+                    <td>
+                    <ul>
+                      <li>#(friend.observation.app)</li>
+                      <li>#(friend.observation.ctx)</li>
+                      <li>#pdate(friend.observation.timestamp)</li>
+                      </ul>
+                    </td>
+                    <td>#(friend.strategy)</td>
+                    #if(friend.strategy == "script"):
+                        <td>#(friend.script)</td>
+                    #endif
+                </tr>
+            #endfor
+          
+            </tbody>
+            </table>
         </div>
+        </p>
+
         <script>
+        /*
             let statusEl = document.getElementById("history");
             let stateObject = JSON.parse(statusEl.innerText);
             let pretty = JSON.stringify(stateObject, null, '\t');
+
+            var formatted = document.getElementById("formatted");
             statusEl.innerHTML = "<pre>" + pretty + "</pre>";
             statusEl.setAttribute("display", "block");
+        */
         </script>
     #endexport
 #endextend
