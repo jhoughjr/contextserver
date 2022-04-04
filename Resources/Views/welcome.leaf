@@ -1,4 +1,4 @@
-#extend("master"):
+#extend("partials/master"):
     #export("content"):
           <p><h2>Welcome to Context Engine</h2></p>
           <hr>

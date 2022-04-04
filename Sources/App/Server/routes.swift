@@ -2,6 +2,7 @@ import Vapor
 import Foundation
 import Network
 import NIOTransportServices
+import Leaf
 
 func encode<T: Codable>(_ o: T) -> String  {
     
@@ -16,7 +17,6 @@ func encode<T: Codable>(_ o: T) -> String  {
     }
 }
 
-import Leaf
 struct PrettyDateTag: LeafTag {
 
     func render(_ ctx: LeafContext) throws -> LeafData {
@@ -96,9 +96,7 @@ func routes(_ app: Application) throws {
     
     app.get("leaf","times") { req async throws -> View in
         
-        let times = EngineTimer.shared.appTimes.map { f in
-            return AppTime(app: f.key, seconds: f.value)
-        }
+        let times = EngineTimer.shared.appTimes.map { AppTime(app: $0.key, seconds: $0.value) }
         
         struct AppTime:Content {
             let app:String
@@ -108,13 +106,17 @@ func routes(_ app: Application) throws {
         struct AppTimesLeaf:Encodable {
             let title:String
             let appTimes:[AppTime]
+            let appTimesJson:String
             let date:String
             let baseURL:String
             let build:String
         }
         
         let ctx = AppTimesLeaf(title: "Context Engine App Times",
-                               appTimes:  times ,
+                               appTimes:  times.sorted(by: { a, b in
+            a.seconds > b.seconds
+        }) ,
+                               appTimesJson: App.encode(times),
                                date: Date().formatted(date: .complete,
                                                       time: .complete),
                                baseURL: "http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)",
