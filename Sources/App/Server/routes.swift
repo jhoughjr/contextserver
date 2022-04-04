@@ -67,9 +67,10 @@ func routes(_ app: Application) throws {
             let date:String
             let baseURL:String
         }
-        
+        let jh = App.encode(ctx)
+        app.logger.info("encoded \(jh)")
         return try await req.view.render("history", Foo(title: "Probe History",
-                                                        jsonHistory: "",
+                                                        jsonHistory: jh ,
                                                         history: ctx,
                                                         date: Date().formatted(date: .complete,
                                                                                time: .complete),
@@ -229,7 +230,12 @@ func routes(_ app: Application) throws {
         return coded
     }
     
+    app.get("json","settings","engine","ignoredApps") { req -> String in
+        encode(ContextEngine.shared.ignoredBundleIDs)
+    }
+    
     app.post("json","settings","engine","ignoredApps") { req -> String in
+        app.logger.info("\(req.body)")
         
         let ignoreOp = try req.content.decode(IgnoredAppRequest.self)
         switch ignoreOp.op {

@@ -99,6 +99,7 @@ public class ContextEngine: NSObject {
         }
     }
     
+    // should be persisted?
     public var ignoredBundleIDs = [String]()
     
     public var engineState:EngineState2? = nil {
