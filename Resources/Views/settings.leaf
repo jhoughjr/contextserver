@@ -1,47 +1,50 @@
 
 #extend("partials/master"):
     #export("content"):
-          <p><h2>Context Engine Settings</h2></p>
+        <h2>Context Engine Settings</h2>
         <div id="settings" style="display:none;">
           <pre>#(settings)</pre>
         </div>
-        <p>
-
+        
+        <p style="display:inline;">
         <h3>Script Location</h3>
-        </p>
-        <p style="display:inline-block;">
+        <div id="currentPath">
+        </div>
         <input type="text" size="64" accept="public.url" id="scriptpath" name="scriptpath">
         <button onClick="changeScriptPath();" title="Sets the context detection scripts location.">Change</button>
         <div id="validSign"></div>
         </p>
-
+        <p>
         <h3>Ignored Apps</h3>
         <input type="text" size="64" id="ignoredAppId" name="ignoredAppId">
         <button onClick="startIgnoringApp();" title="Adds app id to ignored list">Add</button>
         <button onClick="stopIgnoringApp();" title="Removes app id from ignored list">Remove</button>
         <div id="validSign"></div>
-       
+       </p>
+
         <script>
             let statusEl = document.getElementById("settings");
             let stateObject = JSON.parse(statusEl.innerText);
             let pretty = JSON.stringify(stateObject, null, '\t');
 
+            let currentPath =document.getElementById("currentPath");
             let scriptPathPicker = document.getElementById("scriptpath");
            
-            scriptPathPicker.value = stateObject.scriptSourceLocation;
+            currentPath.innerText = stateObject.scriptSourceLocation;
 
             statusEl.innerHTML = "<pre>" + pretty + "</pre>";
             statusEl.setAttribute("display", "block");
 
-
             function startIgnoringApp() {
+
               var appId = document.getElementById("ignoredAppId").value;
 
-            console.log("ignoring " + appId);
-               var myHeaders = new Headers();
+              console.log("ignoring " + appId);
+
+              var myHeaders = new Headers();
               myHeaders.append('Content-Type', 'application/json');
 
-               var payload  = {op: {add:{}}, bundleID:appId};
+             var payload  = {op: {add:{}}, bundleID:appId};
 
               const request = new Request('http://localhost:8080/json/settings/engine/ignoredApps',
                                     {method: 'POST',
@@ -69,8 +72,8 @@
             }
 
             function stopIgnoringApp() {
-                        var appId = document.getElementById("ignoredAppId").value;
 
+            var appId = document.getElementById("ignoredAppId").value;
             console.log("not ignoring " + appId);
               var myHeaders = new Headers();
               myHeaders.append('Content-Type', 'application/json');
@@ -131,6 +134,7 @@
                   console.error(error);
                 });
           }
+
 
         </script>
 

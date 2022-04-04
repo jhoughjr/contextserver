@@ -29,6 +29,11 @@ public enum ContextDiscoveryStrategy:String, Content {
     case api
 }
 
+public enum ProbeInitiator:Content {
+    case appSwitch
+    case jsonAPI
+}
+
 // used in probeHistory
 public struct ProbeAttempt:Content {
     let timestamp:Date

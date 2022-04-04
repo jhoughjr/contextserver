@@ -36,6 +36,7 @@ struct PrettyDateTag: LeafTag {
     }
 }
 
+
 func routes(_ app: Application) throws {
     
     // basic web admin interface
@@ -47,12 +48,25 @@ func routes(_ app: Application) throws {
     }
     
     app.get("leaf","engine") { req async throws -> View in
+        
+        struct LatestLeaf: Content {
+            let title:String
+            let statusJson:String
+            let status:ProbeAttempt?
+            let date:String
+            let baseURL:String
+        }
+        
         let ctx = ContextEngine.shared.probeHistory.last
-        return try await req.view.render("engine", ["title":"Engine Status",
-                                                    "status" : encode(ctx),
-                                                    "date":Date().formatted(date: .complete,
-                                                                            time: .complete),
-                                                    "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
+
+        let foo = LatestLeaf(title: "Latest Probe",
+                             statusJson: encode(ctx),
+                             status: ctx,
+                             date: Date().formatted(date: .complete,
+                                                    time: .complete),
+                             baseURL: "http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)")
+        
+        return try await req.view.render("engine",foo)
     }
     
     app.get("leaf","history") { req async throws -> View in
@@ -252,7 +266,8 @@ func routes(_ app: Application) throws {
     app.get("json","engine","state") { req -> String in
         encode(ContextEngine.shared.state())
     }
-
+    
+    // to turn on.off
     app.post("json","engine","state") { req -> String in
         
         let onOff = try req.content.decode(EngineOnOffRequest.self)
@@ -264,14 +279,25 @@ func routes(_ app: Application) throws {
         return encode(ContextEngine.shared.state())
     }
     
+    //
+    app.post("json","engine","state","probe") { req -> String in
+        
+        ContextEngine.shared.probeContext()
+        return App.encode([""])
+    }
+    
+    // to see what needs support added
     app.get("json","engine","unhandledApps") { req -> String in
         encode(Scripts.unhandledAppIDs)
     }
 
+    // get settings for how the engine works
     app.get("json","settings","engine") { req -> String in
         encode(ContextEngine.shared.engineSettings)
     }
 
+    
+    // get info from engine
     app.get("json","currentObservation") { req -> String in
         encode(ContextEngine.shared.currentObservation())
     }
@@ -284,7 +310,7 @@ func routes(_ app: Application) throws {
         encode(ContextEngine.shared.observationHistory)
     }
     
-    // server
+    // server info
     app.get("json","routes") { req -> String in
         encode(["routes":["json":["get":["engine",
                                          "version",
@@ -309,7 +335,7 @@ func routes(_ app: Application) throws {
                ])
     }
 
-    // server
+    // server info
     app.get("json","version") { req -> String in
         encode(Commands.ver.execute(""))
     }

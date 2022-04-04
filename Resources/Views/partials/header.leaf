@@ -18,7 +18,7 @@
         Timer Settings
     </button>
     <button onClick="window.location.href='#(baseURL)/leaf/websocketprompt'">
-        Websocket Command Prompt
+        Command Prompt
     </button>
     <hr>
 </div>

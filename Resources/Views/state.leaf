@@ -1,12 +1,13 @@
 
 #extend("partials/master"):
     #export("content"):
-          <p><h2>Context Engine State</h2></p>
+        <h2>Context Engine State</h2>
         <div id="state" style="display:none;">
           <pre>#(state)</pre>
         </div>
-        <p>
-          <div id="running" style="display:inline-block;">
+
+        <p style="display:inline-block;">
+          <div id="running">
           </div>
 
           <label class="switch" style="display:inline-block;">
@@ -16,23 +17,25 @@
         </p>
 
         <p>
-        <div style="display:inline-block;" >
-        <h3 style="display:inline-block;">Launched At</h3>
-        </div>
-        <div id="launchedAt" style="display:inline-block;">
-        </div>
-        </p>
-        <p>
-        <div style="display:inline-block;">
-        <h3 style="display:inline-block;">Observations</h3>
-        </div>
-        <div id="observations" style="display:inline-block;">
+        
+        <h3 style="display:inline;">Launched At</h3>
+
+        <div id="launchedAt" style="display:inline;">
         </div>
         </p>
+
         <p>
-        <div style="display:inline-block;">
-        <h3 style="display:inline-block;">Timestamp</h3>
-        <div id="timestamp" style="display:inline-block;">
+        <div style="display:inline;">
+        <h3 style="display:inline;">Observations</h3>
+        </div>
+        <div id="observations" style="display:inline;">
+        </div>
+        </p>
+
+        <p>
+        <div style="display:inline;">
+        <h3 style="display:inline;">Timestamp</h3>
+        <div id="timestamp" style="display:inline;">
         </div>
         </div>
         </p>
