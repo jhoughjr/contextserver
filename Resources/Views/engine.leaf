@@ -1,0 +1,97 @@
+
+#extend("partials/master"):
+    #export("content"):
+        <p><h2>Latest Probe Attempt</h2></p>
+        
+        <div id="status" style="display:none;">
+          <pre>#(statusJson)</pre>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+                <th colspan="4">Probe Attempts</th>
+            </tr>
+            <tr>
+                <th>Time</th>
+                <th>App + Context</th>
+                <th>Strategy</th>
+                <th>Strategy Implementation</th>
+            </tr>
+            </thead>
+            <tbody>
+                <td>
+              #pdate(status.observation.timestamp)
+                </td>
+                <td>
+                <ul>
+                #(status.observation.app)
+                #(status.observation.ctx)
+                <ul>
+                </td>
+                
+                <td>
+                    <ul>
+                    #(status.strategy)
+                    #pdate(status.timestamp)
+                    </ul>
+                </td>
+                <td>#(status.script)</td>
+            </tbody>
+        </table>
+       
+        <button onClick="probe();" title="Executes the available strategy against the current app.">Probe</button>
+
+        <script>
+            let statusEl = document.getElementById("status");
+            let stateObject = JSON.parse(statusEl.innerText);
+            let pretty = JSON.stringify(stateObject, null, '\t');
+            statusEl.innerHTML = "<pre>" + pretty + "</pre>";
+            statusEl.setAttribute("display", "block");
+
+            let app = document.getElementById("app");
+            let context = document.getElementById("context");
+            let strategy = document.getElementById("strategy");
+
+            let strategyDetail = document.getElementById("strategy-detail");
+            let timeStamp = document.getElementById("timestamp");
+            let d = new Date(stateObject.timestamp);
+            timeStamp.innerText = d.toLocaleString() + " " + d.toUTCString();
+            app.innerText = stateObject.observation.app;
+            context.innerText = stateObject.observation.ctx;
+            strategy.innerText = stateObject.strategy;
+            strategyDetail.innerText = stateObject.script
+
+            function probe() {
+
+          
+               var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/engine/state/probe/',
+                                    {method: 'POST',
+                                    body: "",
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  if (response.isValid) {
+                    document.getElementById("validSign").innerText = "Accepted"
+                  }else {
+                    document.getElementById("validSign").innerText = "Not Accepted"
+                  }
+                }).catch(error => {
+                  console.error(error);
+                });
+            }
+        </script>
+    #endexport
+#endextend

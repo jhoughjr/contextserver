@@ -1,0 +1,64 @@
+
+#extend("partials/master"):
+    #export("content"):
+        <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
+
+          <p><h2>Timer</h2></p>
+        <div id="appTimes" style="display:none;">
+          <pre>#(appTimes)</pre>
+        </div>
+        <div id="appTimesJson" style="display:none;">
+          <pre>#(appTimesJson) </pre>
+        </div>
+
+        <p>
+        
+        <div id ="myDiv">
+        </div>
+
+          <table border=1 cellpadding=8 cellspacing=8>
+            <thead>
+            <tr>
+                <th colspan="2">App Times</th>
+            </tr>
+            <tr>
+                <th>App</th>
+                <th>Seconds</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            #for(time in appTimes):
+            <tr>
+              <td>#(time.app)</td>
+              <td>#(time.seconds)</td>
+            </tr>
+            #endfor
+            </tbody>
+            </table>
+        </p>
+
+      <script>
+          const times = JSON.parse(document.getElementById("appTimesJson").innerText);
+
+          var data = [{
+          values:times.map( t => t.seconds),
+          labels: times.map(t => t.app),
+          type: 'pie'
+        }];
+
+      var layoutt = {
+      title: 'Time Distribution',
+      font: {size: 18, color:"#f3be5d"},
+      paper_bgcolor:'rgba(0,0,0,0)',
+      plot_bgcolor:'rgba(0,0,0,0)',
+      height: 800,
+      width: 800,
+      color: "#f3be5d"
+    };
+
+    Plotly.newPlot('myDiv', data, layoutt);
+    </script>
+
+    #endexport
+#endextend

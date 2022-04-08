@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <title>#(pageData.title)</title>
+        <link rel="stylesheet" href="/styles/dark.css">
+    </head>
+    <body class="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900 dark-mode">
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.8.0/dist/alpine.js" defer></script>
+        
+        <!-- HEADER -->
+        #extend("partials/header")
+        
+        <!-- CONTENT -->
+        <main class="font-sans-body flex-grow bg-gray-100 dark:bg-gray-900 safe-left safe-right safe-bottom">
+            #import("content")
+        </main>
+        
+        <!-- FOOTER -->
+        #extend("partials/footer")
+        
+    </body>
+</html>

@@ -9,23 +9,31 @@
 
 import Cocoa
 import Vapor
-
 import OSAKit
 
 class Scripts {
 
+    // should be user configurable
+    public static var sourceLocation =  URL(string:UserDefaults.standard.string(forKey: "scriptSourceLocation") ?? "") ?? URL(fileURLWithPath: "public/context-discovery/strategies/")
+    
     public static var vaporApp:Vapor.Application? = nil
     
     public static var unhandledAppIDs = [String]()
  
     public static func script(for appID:String) -> OSAScript? {
         
-        // shold more explicitly support other scripting langs?
-        // find a way not to rely on .applescript extension shold suffice/
+        var url:URL
         
-        // need to get public/context-discovery/scripts/:bundleID.dataset/:bundleID.applescript
-
-        let url = URL(fileURLWithPath: "public/context-discovery/scripts/\(appID).dataset/\(appID).applescript")
+        if let stored = UserDefaults.standard.string(forKey: "scriptSourceLocation"),
+           let uStored = URL(string: stored) {
+            url = uStored.appendingPathComponent(
+                URL(fileURLWithPath: "\(appID).dataset/\(appID).applescript").relativePath
+            )
+        }else {
+            url = sourceLocation.appendingPathComponent(
+                URL(fileURLWithPath: "\(appID).dataset/\(appID).applescript").relativePath
+            )
+        }
         
         if let data = try? Data(contentsOf: url) {
             if let source = String(data: data, encoding: .utf8) {
@@ -35,7 +43,9 @@ class Scripts {
                 return nil
             }
         }else {
-            unhandledAppIDs.append(appID)
+            if !unhandledAppIDs.contains(appID) {
+                unhandledAppIDs.append(appID)
+            }
             return nil
         }
     }
@@ -50,7 +60,7 @@ class Scripts {
         return ""
     }
     
-    private static func runCommand(cmd: String,
+    public static func runCommand(cmd: String,
                                    args: [String]) -> String {
         let outPipe = Pipe()
         let proc = Process()

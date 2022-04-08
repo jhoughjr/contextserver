@@ -1,0 +1,228 @@
+
+#extend("partials/master"):
+    #export("content"):
+          <p><h2>Engine Timer Settings</h2></p>
+        <div id="engineTimerSettings" style="display:none;">
+          <pre>#(settings)</pre>
+        </div>
+
+
+        <!--on engineTimer -->
+        <p>
+          <div id="timing" style="display:inline-block;">
+          Timing
+          </div>
+
+          <label class="switch" style="display:inline-block;">
+            <input type="checkbox" id="timingonOff" style="display:inline-block;">
+            <span class="slider round"></span>
+          </label>
+        </p>
+        <!--on engineTimeRecorder -->
+        <p>
+          <div id="recording" style="display:inline-block;">
+          Recording
+          </div>
+
+          <label class="switch" style="display:inline-block;">
+            <input type="checkbox" id="recordingonOff" style="display:inline-block;">
+            <span class="slider round"></span>
+          </label>
+        </p>
+
+         <p>
+         <h3>MongoDB Connection String</h3>
+         </p>
+         <p style="display:inline;">
+        <div id="currentString"></div>
+        <input type="text" size="64" accept="public.url" id="connectionString" name="connectionString">
+        <button onClick="changeConnectionString();" title="Configures the MongoDB to use.">Change</button><div style="display:inline-block;" id="validSign"></div>
+        </p>
+
+        <script>
+          
+          // get state
+           let stateObject = JSON.parse(document.getElementById("engineTimerSettings").innerText);
+          console.log(stateObject);
+
+          // get document parts
+           let imed = document.getElementById("immediate");
+           let swi = document.getElementById("onSwitch");
+           let connectionStringPicker = document.getElementById("connectionString");
+
+           let recordingOnOff = document.getElementById("recordingonOff");
+           let timingOnOff = document.getElementById("timingonOff");
+           let current = document.getElementById("currentString");
+           current.innerText = stateObject.recorder.mongoConnectionString;
+           
+          if (stateObject.recorder.isRecording) {
+            recordingonOff.setAttribute("checked","");
+          }
+          else {
+            recordingonOff.removeAttribute("checked");
+          }
+
+          if (stateObject.timer.isTiming) {
+            timingonOff.setAttribute("checked","");
+          }
+          else {
+            timingOnOff.removeAttribute("checked");
+          }
+          // add event listeners
+          recordingOnOff.addEventListener('change', toggleRecordOnOff);
+          timingOnOff.addEventListener('change', toggleTimerOnOff);
+
+          function toggleTimerOnOff() {
+             if (stateObject.timer.isTiming) {
+                timing(false);
+                console.log("will toggle false");
+
+              }else {
+                timing(true);
+                console.log("will toggle true");
+
+              }
+          }
+
+          function toggleRecordOnOff() {
+            
+             if (stateObject.recorder.isRecording) {
+
+                recording(false);
+                console.log("will toggle false");
+            }else {
+                recording(true);
+                console.log("will toggle true");
+
+            }
+          }
+
+          // radio toggles
+          function clickImmed() {
+            console.log("immediate");
+            // when done with req should reload
+            if (point.onSwitch) {
+              console.log("will set immediate from onswitch");
+              updateTime("{\"immediately\":{}}");
+           }
+          }
+
+          // radio toggles
+          function clickSwi() {
+            console.log("onswitch");
+            // when done with req should reload
+             if (point.immediately) {
+            console.log("will set onswitch from immediate");
+            updateTime("{\"onSwitch\":{}}");
+           }
+          }
+
+          function updateTime(value) {
+            var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/engineTimeRecorder/timeUpdatePoint',
+                                    {method: 'POST',
+                                       body: '{"updatePoint":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  window.location.reload();
+                }).catch(error => {
+                  console.error(error);
+                });
+       
+          }
+
+          // onClick
+          function changeConnectionString() {
+           var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/engineTimeRecorder/mongoConnectionString',
+                                    {method: 'POST',
+                                    body: '{"string":"' + connectionStringPicker.value + '"}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  document.getElementById("validSign").innerText = "Accepted";
+                }).catch(error => {
+                  console.error(error);
+                  document.getElementById("validSign").innerText = "Not Accepted"
+                });
+          }
+
+          function timing(value) {
+              var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/engineTimer/isTiming',
+                                    {method: 'POST',
+                                    body: '{"isTiming":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  document.getElementById("validSign").innerText = "Accepted";
+                }).catch(error => {
+                  console.error(error);
+                  document.getElementById("validSign").innerText = "Not Accepted"
+                });
+          }
+
+          function recording(value) {
+            var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/settings/engineTimeRecorder/isRecording',
+                                    {method: 'POST',
+                                    body: '{"isRecording":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+                  document.getElementById("validSign").innerText = "Accepted";
+                }).catch(error => {
+                  console.error(error);
+                  document.getElementById("validSign").innerText = "Not Accepted"
+                });
+          }
+          </script>
+
+    #endexport
+#endextend

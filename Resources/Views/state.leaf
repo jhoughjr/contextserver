@@ -1,0 +1,120 @@
+
+#extend("partials/master"):
+    #export("content"):
+        <h2>Context Engine State</h2>
+        <div id="state" style="display:none;">
+          <pre>#(state)</pre>
+        </div>
+
+        <p style="display:inline-block;">
+          <div id="running">
+          </div>
+
+          <label class="switch" style="display:inline-block;">
+            <input type="checkbox" id="onOff" style="display:inline-block;">
+            <span class="slider round"></span>
+          </label>
+        </p>
+
+        <p>
+        
+        <h3 style="display:inline;">Launched At</h3>
+
+        <div id="launchedAt" style="display:inline;">
+        </div>
+        </p>
+
+        <p>
+        <div style="display:inline;">
+        <h3 style="display:inline;">Observations</h3>
+        </div>
+        <div id="observations" style="display:inline;">
+        </div>
+        </p>
+
+        <p>
+        <div style="display:inline;">
+        <h3 style="display:inline;">Timestamp</h3>
+        <div id="timestamp" style="display:inline;">
+        </div>
+        </div>
+        </p>
+
+        <script>
+            // grab elements
+            let statusEl = document.getElementById("state");
+            let stateObject = JSON.parse(statusEl.innerText);
+            let running = document.getElementById("running");
+            let timestamp = document.getElementById("timestamp");
+            let launchedAt = document.getElementById("launchedAt");
+            let observations = document.getElementById("observations");
+            let onOff = document.getElementById("onOff");
+
+            // setup inputs
+            onOff.input = toggleOnOff;
+            onOff.addEventListener('change', toggleOnOff);
+            // parse state
+            let pretty = JSON.stringify(stateObject, null, '\t');
+            statusEl.innerHTML = "<pre>" + pretty + "</pre>";
+
+            if (stateObject.running) {
+              running.innerHTML = "<h3 style=\"color:green;\">Running</h3>";
+              console.log("set running" + stateObject.running + " " + running);
+              onOff.setAttribute("checked","");
+            }else {
+              running.innerHTML = "<h3 style=\"color:red\">Not Running</h3>";
+              console.log("set running" + stateObject.running  + " " + running);
+              onOff.removeAttribute("checked");
+            }
+            
+            // pretty up dates
+            let d = new Date( stateObject.launchedAt);
+            launchedAt.innerHTML = d.toLocaleString() + " " + d.toUTCString();
+            let d2 = new Date( stateObject.timestamp);
+            timestamp.innerHTML = d2.toLocaleString() + " " + d2.toUTCString();;
+            observations.innerHTML = stateObject.observations;
+
+            // functions
+            function toggleOnOff() {
+
+              console.log("toggle " + JSON.stringify(onOff));
+             
+             if (stateObject.running) {
+                engine(0);
+             }
+             else {
+              engine(1);
+             }
+            }
+
+            function engine(value) {
+
+              console.log("posting");
+              var myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+
+              const request = new Request('http://localhost:8080/json/engine/state',
+                                    {method: 'POST',
+                                       body: '{"value":' + value + '}',
+                                    headers: myHeaders}
+                                    );
+              fetch(request)
+                .then(response => {
+                  if (response.status === 200) {
+                    return response.json();
+                  } else {
+                    throw new Error('Something went wrong on api server!');
+                  }
+                })
+                .then(response => {
+                  console.debug(response);
+
+                }).catch(error => {
+                  console.error(error);
+                });
+       
+            }
+
+        </script>
+    #endexport
+#endextend
