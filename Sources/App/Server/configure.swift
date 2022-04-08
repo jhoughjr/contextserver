@@ -34,6 +34,7 @@ public func configure(_ app: Application) throws {
     app.http.server.configuration.serverName = "vapor4-context-server"
 
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+    
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .all,
         allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
@@ -62,7 +63,7 @@ public func configure(_ app: Application) throws {
     app.logger.info("Template Engine configured.")
 
     do {
-    try app.initializeMongoDB(connectionString: "mongodb://127.0.0.1:27017/contextengine")
+        try app.initializeMongoDB(connectionString: "mongodb://127.0.0.1:27017/contextengine")
         app.logger.info("MongoKitten initialzed.")
     }
     catch {

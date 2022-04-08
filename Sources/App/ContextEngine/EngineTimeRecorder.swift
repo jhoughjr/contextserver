@@ -23,7 +23,7 @@ class EngineTimeRecorder {
     private var recordedTimes = [String:Double]()
     
     public func switched(app:String,time:Double) {
-        if self.settings.isRecording && self.settings.updatePoint == .onSwitch {
+        if self.settings.isRecording {
             Task {
                 try await self.recordTime(app: app, seconds: time)
             }
@@ -32,7 +32,7 @@ class EngineTimeRecorder {
     
     public func ticked(app:String, time:Double) {
 //        vaporApp?.logger.info("[RECORDER] tick")
-        if self.settings.isRecording && self.settings.updatePoint == .immediately {
+        if self.settings.isRecording {
             Task {
                 try await self.recordTime(app: app, seconds: time)
             }
@@ -53,18 +53,14 @@ class EngineTimeRecorder {
 struct MongoConnectionStringRequest:Content {
     let string:String
 }
+
 struct EngineTimeRecorderOnOffRequest:Content {
     let isRecording:Bool
 }
 
 struct EngineTimeRecorderSettings:Content {
     
-    public enum UpdatePoint:Content {
-        case onSwitch // updated on switch, current app time will lead db
-        case immediately //every second
-    }
-    
-    public var updatePoint:UpdatePoint = .immediately //when to record
+  
     // should pull from storage or env or something central
     public var mongoConnectionString:String = "mongodb://127.0.0.1:27017/contextengine"
     public var isRecording = true

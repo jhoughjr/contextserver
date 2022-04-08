@@ -31,7 +31,7 @@ class EngineTimer {
         
     public var vaporApp:Vapor.Application?
     
-    public var appTimes = [String:Double]()
+    public var appTimes = [String:Double]() 
     
     public var timedApp = "" {
         didSet {
@@ -75,7 +75,8 @@ class EngineTimer {
                 self.tick()
             }
             
-        }else {
+        }
+        else {
             vaporApp?.logger.info("[TIMER] timing off.")
             timer?.invalidate()
             timer = nil
@@ -87,6 +88,7 @@ class EngineTimer {
         if let times = UserDefaults.standard.value(forKey: "appTimes") as? [String:Double] {
             self.appTimes = times
         }
+        
     }
     
     public func reset() {
@@ -100,6 +102,5 @@ class EngineTimer {
     init(_ app:Vapor.Application?) {
         vaporApp = app
         app?.logger.notice("[TIMER] Engine Timer Started.")
-        load()
     }
 }

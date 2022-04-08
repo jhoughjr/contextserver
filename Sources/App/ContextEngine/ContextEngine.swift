@@ -85,13 +85,26 @@ public class ContextEngine: NSObject {
     
     public static let shared = ContextEngine(app:nil)
     
+    public var icons = [String:Data]()
+    
     init(app:Vapor.Application) {
         ContextEngine.shared.vaporApp = app
     }
     
     public var vaporApp:Application?
 
-    private var currentAppId = ""
+    private var currentAppId = "" {
+        didSet {
+            
+            if let icon = NSWorkspace.shared.menuBarOwningApplication?.icon?.tiffRepresentation {
+                let u = URL(string: "file://\(vaporApp?.directory.publicDirectory)/icons/\(currentAppId).tiff")
+                
+                let foo = FileManager.default.createFile(atPath: u?.absoluteString ?? "", contents: icon)
+                vaporApp?.logger.info("wrote \(foo) to \(u?.absoluteString)")
+            }
+        }
+    }
+    
     private var currentContextId = ""
     
     public var observationHistory = [ContextObservation]()
@@ -267,7 +280,8 @@ public class ContextEngine: NSObject {
     public func stop() {
         EngineTimer.shared.timedApp = ""
         stopObservingMenubarOwner()
-        engineState = EngineState2(launchedAt: engineState?.launchedAt, timestamp: Date(),
+        engineState = EngineState2(launchedAt: engineState?.launchedAt,
+                                   timestamp: Date(),
                                    observations: UInt(observationHistory.count),
                                    running: false)
     }
@@ -275,7 +289,6 @@ public class ContextEngine: NSObject {
     public init(app:Application?) {
         super.init()
         self.vaporApp = app
-        start()
     }
     
     func strategy(for appID:String) -> ContextDiscoveryStrategy {

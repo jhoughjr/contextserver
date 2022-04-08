@@ -9,7 +9,6 @@ let app = Application(env)
 defer { app.shutdown() }
 try configure(app)
 
-
 DispatchQueue.global().async {
     app.logger.info("Running Vapor Application...")
     try? app.run()

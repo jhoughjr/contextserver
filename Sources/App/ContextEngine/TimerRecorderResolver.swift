@@ -19,7 +19,7 @@ class TimerRecorderSettingsResolver {
         EngineTimer.shared.settings = EngineTimerSettings(isTiming: false)
         
         // cant record if not timing
-        recorder.settings = EngineTimeRecorderSettings(updatePoint: recorder.settings.updatePoint,
+        recorder.settings = EngineTimeRecorderSettings(
                                                        mongoConnectionString: recorder.settings.mongoConnectionString,
                                                        isRecording: false)
     }
@@ -29,7 +29,7 @@ class TimerRecorderSettingsResolver {
         let recorder = EngineTimeRecorder.shared
         EngineTimer.shared.settings = EngineTimerSettings(isTiming: true)
         
-        recorder.settings = EngineTimeRecorderSettings(updatePoint: recorder.settings.updatePoint,
+        recorder.settings = EngineTimeRecorderSettings(
                                                        mongoConnectionString: recorder.settings.mongoConnectionString,
                                                        isRecording: true)
     }
@@ -37,7 +37,7 @@ class TimerRecorderSettingsResolver {
     // can time and not record
     public func stopRecording() {
         let recorder = EngineTimeRecorder.shared
-        recorder.settings = EngineTimeRecorderSettings(updatePoint: recorder.settings.updatePoint,
+        recorder.settings = EngineTimeRecorderSettings(
                                                        mongoConnectionString: recorder.settings.mongoConnectionString,
                                                        isRecording: false)
     }

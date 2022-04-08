@@ -4,6 +4,7 @@ import Network
 import NIOTransportServices
 import Leaf
 
+
 func encode<T: Codable>(_ o: T) -> String  {
     
     let encoder = JSONEncoder()
@@ -40,6 +41,7 @@ struct PrettyDateTag: LeafTag {
 func routes(_ app: Application) throws {
     
     // basic web admin interface
+    
     app.get("leaf", "websocketprompt") { req async throws -> View in
         return try await req.view.render("websocketprompt", ["title":"Websocket Command Prompt",
                                                              "date":Date().formatted(date: .complete,
@@ -81,6 +83,7 @@ func routes(_ app: Application) throws {
             let date:String
             let baseURL:String
         }
+        
         let jh = App.encode(ctx)
         app.logger.info("encoded \(jh)")
         return try await req.view.render("history", Foo(title: "Probe History",
@@ -169,7 +172,7 @@ func routes(_ app: Application) throws {
 }
     
     // JSON Interface
-    
+
     // timer
     app.get("json","times") { req -> String in
         encode(EngineTimer.shared.appTimes)
@@ -196,7 +199,7 @@ func routes(_ app: Application) throws {
     app.post("json","settings","engineTimeRecorder","isRecording") { req -> String in
         
         let onOffReq = try req.content.decode(EngineTimeRecorderOnOffRequest.self)
-        let new = EngineTimeRecorderSettings(updatePoint: EngineTimeRecorder.shared.settings.updatePoint,
+        let new = EngineTimeRecorderSettings(
                                              mongoConnectionString: EngineTimeRecorder.shared.settings.mongoConnectionString,
                                              isRecording: onOffReq.isRecording)
         
@@ -212,21 +215,13 @@ func routes(_ app: Application) throws {
     app.post("json","settings","engineTimeRecorder","mongoConnectionString") { req -> String in
         
         let conStringReq = try req.content.decode(MongoConnectionStringRequest.self)
-        let new = EngineTimeRecorderSettings(updatePoint: EngineTimeRecorder.shared.settings.updatePoint,
+        let new = EngineTimeRecorderSettings(
                                              mongoConnectionString: conStringReq.string)
         
         EngineTimeRecorder.shared.settings = new
         return encode(new)
     }
     
-    app.post("json","settings","engineTimeRecorder","timeUpdatePoint") { req -> String in
-        
-        let validation = try req.content.decode(TimeUpdatePointRequest.self)
-        EngineTimeRecorder.shared.settings.updatePoint = validation.updatePoint
-        let coded = encode(EngineTimeRecorder.shared.settings)
-        req.logger.debug("\(coded)")
-        return coded
-    }
     
     // engine
     app.post("json","settings","engine","validateScriptPath") { req -> String in
@@ -376,5 +371,4 @@ func routes(_ app: Application) throws {
     for r in app.routes.all {
         app.logger.info("\(r)")
     }
-    
 }
