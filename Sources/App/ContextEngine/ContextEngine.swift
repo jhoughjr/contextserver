@@ -178,7 +178,7 @@ public class ContextEngine: NSObject {
             currentContextId = Scripts.resultOfScript(for: currentAppId)
         case .api:
             vaporApp?.logger.warning("[ENGINE] \(s) not implemented for any apps yet.")
-            currentContextId = Scripts.resultOfScript(for: currentAppId)
+            currentContextId = APIs.call(APIs.api(for: currentAppId))
         }
         
         let observation = currentObservation()
