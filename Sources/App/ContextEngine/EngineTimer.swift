@@ -86,7 +86,7 @@ class EngineTimer {
     func load() {
     
         if let times = UserDefaults.standard.value(forKey: "appTimes") as? [String:Double] {
-            self.appTimes = times
+//            self.appTimes = times
         }
         
     }

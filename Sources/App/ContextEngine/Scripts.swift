@@ -36,6 +36,7 @@ class Scripts {
         }
         
         if let data = try? Data(contentsOf: url) {
+            
             if let source = String(data: data, encoding: .utf8) {
                 return OSAScript(source: source)
             }else {
@@ -70,9 +71,10 @@ class Scripts {
         proc.standardOutput = outPipe
         proc.launch()
         proc.waitUntilExit()
-        
+
         let data = outPipe.fileHandleForReading.readDataToEndOfFile()
         let res =  String(data: data, encoding: .utf8) ?? "ERROR"
+        //should trim?
         return res
     }
 

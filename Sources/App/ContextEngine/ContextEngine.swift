@@ -95,7 +95,6 @@ public class ContextEngine: NSObject {
 
     private var currentAppId = "" {
         didSet {
-            
             if let icon = NSWorkspace.shared.menuBarOwningApplication?.icon?.tiffRepresentation {
                 let u = URL(string: "file://\(vaporApp?.directory.publicDirectory)/icons/\(currentAppId).tiff")
                 
@@ -120,11 +119,7 @@ public class ContextEngine: NSObject {
     // should be persisted?
     public var ignoredBundleIDs = [String]()
     
-    public var engineState:EngineState2? = nil {
-        didSet {
-            vaporApp?.logger.info("[ENGINE] state update \(engineState)")
-        }
-    }
+    public var engineState:EngineState2? = nil
     
     public func isValidScriptPath(_ p:ScriptPathValidation) async throws -> ScriptPathValidationResult {
         ScriptPathValidationResult(isValid:directoryExistsAtPath(p.path))
@@ -173,6 +168,7 @@ public class ContextEngine: NSObject {
     }
         
     public func probeContext() {
+        
         vaporApp?.logger.info("[ENGINE] probing...")
 
         let s = strategy(for: currentAppId)
@@ -237,7 +233,6 @@ public class ContextEngine: NSObject {
   
     public func startObservingMenubarOwner() {
         
-        vaporApp?.logger.info("[ENGINE] Starting observation for \\.menuBarOwningApplication ...")
         obs = NSWorkspace.shared.observe(\.menuBarOwningApplication,
                                               options: [.new]) {[weak self] ws, change in
             
@@ -250,10 +245,16 @@ public class ContextEngine: NSObject {
             }
         }
         
+        vaporApp?.logger.info("[ENGINE] Started observation for \\.menuBarOwningApplication ...")
+
         if let bundleID = NSWorkspace.shared.menuBarOwningApplication?.bundleIdentifier {
             currentAppId = bundleID
+            EngineTimer.shared.timedApp = bundleID
+
             probeContext()
         }
+        vaporApp?.logger.info("[ENGINE] Initial probe complete.")
+
     }
 
     public func stopObservingMenubarOwner() {
@@ -264,7 +265,6 @@ public class ContextEngine: NSObject {
     }
     
     public func start() {
-        
         
         startObservingMenubarOwner()
         engineState = EngineState2(launchedAt: Date(),

@@ -48,9 +48,9 @@ public func configure(_ app: Application) throws {
     do {
     // Enable TLS.
         try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
-        certificateChain: NIOSSLCertificate.fromPEMFile("/path/to/cert.pem").map { .certificate($0) },
-        privateKey: .file("/path/to/key.pem")
-    )
+            certificateChain: NIOSSLCertificate.fromPEMFile("/path/to/cert.pem").map { .certificate($0) },
+            privateKey: .file("/path/to/key.pem")
+        )
         app.logger.info("TLS Supported.")
 
     }
@@ -77,6 +77,5 @@ public func configure(_ app: Application) throws {
     app.lifecycle.use(EngineLifeCycle())
     app.logger.info("Engine Lifecyle installed.")
     app.logger.info("WebsocketCommands Installed.")
-    app.logger.info("\(Commands.help.execute(""))")
 
 }

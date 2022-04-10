@@ -335,6 +335,36 @@ func routes(_ app: Application) throws {
         encode(Commands.ver.execute(""))
     }
     
+    app.post("json", "scripts") { req -> String in
+        struct ScriptRequest:Content {
+            let appID:String
+        }
+        if let request = try? req.content.decode(ScriptRequest.self) {
+            var foo = [String:String]()
+            foo["script"] = Scripts.script(for: request.appID)?.source
+            foo["appID"] = request.appID
+            return App.encode(foo)
+        }else {
+            return ""
+        }
+    }
+    
+    app.post("json", "strategies") { req -> String in
+        struct StrategyRequest:Content {
+            let appID:String
+        }
+        
+        if let request = try? req.content.decode(StrategyRequest.self) {
+            var foo = [String:String]()
+            foo["strategy"] = App.encode(ContextEngine.shared.strategy(for: request.appID))
+            foo["appID"] = request.appID
+            return App.encode(foo)
+        }else {
+            return ""
+        }
+        
+    }
+    
     // Websocket Interface
     app.webSocket("ws","context") { req, ws in
         app.logger.info("\(String(describing: req.remoteAddress)) connected to context channel")
