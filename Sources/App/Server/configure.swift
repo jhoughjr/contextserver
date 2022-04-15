@@ -75,6 +75,7 @@ public func configure(_ app: Application) throws {
     try routes(app)
     app.logger.info("Routes installed.")
     app.lifecycle.use(EngineLifeCycle())
+    CommandProcessor.shared.app = app
     app.logger.info("Engine Lifecyle installed.")
     app.logger.info("WebsocketCommands Installed.")
 

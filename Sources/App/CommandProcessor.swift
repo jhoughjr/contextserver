@@ -29,6 +29,7 @@ enum Commands:String, Codable, CaseIterable {
     case times
     case ignoredApps
     case unhandledApps
+    case shutdown
     
     func execute( _ args:String?) -> String {
         
@@ -113,6 +114,8 @@ enum Commands:String, Codable, CaseIterable {
             return "not imp \(args)"
         case .unhandledApps:
             return App.encode(Scripts.unhandledAppIDs)
+        case .shutdown:
+            return ""
         }
     }
 }
@@ -120,6 +123,7 @@ enum Commands:String, Codable, CaseIterable {
 class CommandProcessor {
     
     static let shared = CommandProcessor()
+    var app:Vapor.Application?
     
     func handleCommand(commandString:String,
                        for ws:WebSocket ) {
@@ -130,6 +134,13 @@ class CommandProcessor {
             let parts = commandString.components(separatedBy: .whitespaces)
             
             ws.send("'\(commandString)' executing...") // mark execution start
+            if command.rawValue == "shutdown" {
+                DispatchQueue.main.async {
+                    self.app?.shutdown()
+                    exit(3)
+                }
+                
+            }
             if command == .help {
                 ws.send(command.execute("") + " * Client commands are open, clr, and bye")
             }else

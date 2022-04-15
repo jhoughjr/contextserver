@@ -93,16 +93,7 @@ public class ContextEngine: NSObject {
     
     public var vaporApp:Application?
 
-    private var currentAppId = "" {
-        didSet {
-            if let icon = NSWorkspace.shared.menuBarOwningApplication?.icon?.tiffRepresentation {
-                let u = URL(string: "file://\(vaporApp?.directory.publicDirectory)/icons/\(currentAppId).tiff")
-                
-                let foo = FileManager.default.createFile(atPath: u?.absoluteString ?? "", contents: icon)
-                vaporApp?.logger.info("wrote \(foo) to \(u?.absoluteString)")
-            }
-        }
-    }
+    private var currentAppId = ""
     
     private var currentContextId = ""
     
