@@ -78,5 +78,5 @@ public func configure(_ app: Application) throws {
     CommandProcessor.shared.app = app
     app.logger.info("Engine Lifecyle installed.")
     app.logger.info("WebsocketCommands Installed.")
-
+ 
 }

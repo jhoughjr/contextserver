@@ -20,8 +20,5 @@
     <button onClick="window.location.href='#(baseURL)/leaf/websocketprompt'">
         Command Prompt
     </button>
-      <button onClick="window.location.href='#(baseURL)/leaf/bible'">
-       Bible
-    </button>
     <hr>
 </div>
