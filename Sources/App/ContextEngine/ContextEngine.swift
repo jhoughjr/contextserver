@@ -154,13 +154,13 @@ public class ContextEngine: NSObject {
                                    app: currentAppId,
                                    ctx: currentContextId,
                                    origin: "\(vaporApp?.http.server.configuration.address)" )
-        vaporApp?.logger.info("[ENGINE] observed: \(o)")
+//        vaporApp?.logger.info("[ENGINE] observed: \(o)")
         return o
     }
         
     public func probeContext() {
         
-        vaporApp?.logger.info("[ENGINE] probing...")
+//        vaporApp?.logger.info("[ENGINE] probing...")
 
         let s = strategy(for: currentAppId)
         
@@ -229,14 +229,18 @@ public class ContextEngine: NSObject {
             
             if let bundleID = change.newValue??.bundleIdentifier {
                 
-                self?.vaporApp?.logger.info("[ENGINE] app changed to \(bundleID)")
-                self?.currentAppId = bundleID
-                EngineTimer.shared.timedApp = bundleID
-                self?.probeContext()
+//                self?.vaporApp?.logger.info("[ENGINE] app changed to \(bundleID)")
+                if !self!.ignoredBundleIDs.contains(bundleID) {
+                    self?.currentAppId = bundleID
+                    EngineTimer.shared.timedApp = bundleID
+                    self?.probeContext()
+                }else {
+                    
+                }
             }
         }
         
-        vaporApp?.logger.info("[ENGINE] Started observation for \\.menuBarOwningApplication ...")
+//        vaporApp?.logger.info("[ENGINE] Started observation for \\.menuBarOwningApplication ...")
 
         if let bundleID = NSWorkspace.shared.menuBarOwningApplication?.bundleIdentifier {
             currentAppId = bundleID

@@ -4,7 +4,6 @@ import Network
 import NIOTransportServices
 import Leaf
 
-
 func encode<T: Codable>(_ o: T) -> String  {
     
     let encoder = JSONEncoder()
@@ -250,6 +249,7 @@ func routes(_ app: Application) throws {
         switch ignoreOp.op {
         case .add:
             ContextEngine.shared.ignoredBundleIDs.append(ignoreOp.bundleID)
+            app.logger.info("\(ContextEngine.shared.ignoredBundleIDs)")
         case .remove:
             if let i = ContextEngine.shared.ignoredBundleIDs.firstIndex(of: ignoreOp.bundleID) {
                 ContextEngine.shared.ignoredBundleIDs.remove(at: i)

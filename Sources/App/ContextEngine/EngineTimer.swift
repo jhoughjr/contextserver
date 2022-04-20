@@ -67,7 +67,7 @@ class EngineTimer {
         
         if settings.isTiming {
             
-            vaporApp?.logger.notice("[TIMER] Engine Timer scheduling.")
+//            vaporApp?.logger.notice("[TIMER] Engine Timer scheduling.")
 
             timer?.invalidate()
             timer = Timer.scheduledTimer(withTimeInterval: 1,
