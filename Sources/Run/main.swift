@@ -1,4 +1,3 @@
-import AppKit
 import App
 import Vapor
 
@@ -7,16 +6,18 @@ try LoggingSystem.bootstrap(from: &env)
 let app = Application(env)
 defer { app.shutdown() }
 try configure(app)
-app.logger.info("*** NOTE ***")
-app.logger.info("Ctrl-C does not work to properly shutdown the server. Use the 'shutdown' command @ /ws/command ")
-app.logger.info("*** NOTE ***")
 
-DispatchQueue.main.async {
-
-    app.logger.info("Running Vapor Application...")
-    try? app.start()
+let appThread = Thread {
+    do {
+        try app.run()
+        exit(0)
+    } catch {
+        print(error)
+        exit(1)
+    }
 }
-app.logger.info("Starting main runloop for NSWorkspace observations...")
+
+appThread.name = "Application"
+appThread.start()
+
 RunLoop.main.run()
-
-
