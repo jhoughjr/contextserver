@@ -24,7 +24,7 @@ struct PrettyDateTag: LeafTag {
 
         switch ctx.parameters.count {
         case 1:
-            guard let date = ctx.parameters[0].string else {
+            guard let _ = ctx.parameters[0].string else {
                 throw NowTagError()
             }
         default:
