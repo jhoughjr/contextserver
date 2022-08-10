@@ -11,8 +11,14 @@ import Cocoa
 import Vapor
 import OSAKit
 
-class Scripts {
 
+class Scripts {
+    enum ScriptPurpose:String, CaseIterable {
+        case contextRetrieval = "context-retrieval"
+        case appChangedEvent = "app-changed-event"
+        case contextChangedEvent = "context-changed-event"
+    }
+    
     // should be user configurable
     public static var sourceLocation =  URL(string:UserDefaults.standard.string(forKey: "scriptSourceLocation") ?? "") ?? URL(fileURLWithPath: "public/context-discovery/strategies/")
     
@@ -20,6 +26,32 @@ class Scripts {
     
     public static var unhandledAppIDs = [String]()
  
+    public static func script(for purpose:Scripts.ScriptPurpose) -> OSAScript? {
+        
+        switch purpose {
+            
+        case .contextRetrieval:
+            return  nil
+        case .appChangedEvent:
+            return nil
+        case .contextChangedEvent:
+            return nil
+        }
+    }
+    
+    public static func set(script source:String, for purpose:Scripts.ScriptPurpose)  {
+        
+        switch purpose {
+            
+        case .contextRetrieval:
+            break;
+        case .appChangedEvent:
+            print("")
+        case .contextChangedEvent:
+            print("")
+        }
+    }
+    
     public static func script(for appID:String) -> OSAScript? {
         
         var url:URL

@@ -41,6 +41,10 @@ func routes(_ app: Application) throws {
     
     // basic web admin interface
     
+    app.get("") { req async throws -> Response in
+        req.redirect(to: "/leaf/welcome", type: .normal)
+    }
+    
     app.get("leaf", "websocketprompt") { req async throws -> View in
         return try await req.view.render("websocketprompt", ["title":"Websocket Command Prompt",
                                                              "date":Date().formatted(date: .complete,
@@ -168,7 +172,7 @@ func routes(_ app: Application) throws {
                                                                 "date":Date().formatted(date: .complete,
                                                                                         time: .complete),
                                                                 "baseURL":"http://\(app.http.server.configuration.hostname):\(app.http.server.configuration.port)"])
-}
+    }
     
     // JSON Interface
 
@@ -221,7 +225,6 @@ func routes(_ app: Application) throws {
         return encode(new)
     }
     
-    
     // engine
     app.post("json","settings","engine","validateScriptPath") { req -> String in
         
@@ -242,7 +245,24 @@ func routes(_ app: Application) throws {
         encode(ContextEngine.shared.ignoredBundleIDs)
     }
     
-    app.post("json","settings","engine","ignoredApps") { req -> String in
+    // these run in addition
+    app.get("json", "settings", "engine", "appChangedScript") { req -> String in
+        "Not Implemented"
+    }
+    
+    app.post("json", "settings", "engine", "appChangedScript") { req -> String in
+        "Not Implemented"
+    }
+    
+    app.get("json", "settings", "engine", "ctxChangedScript") { req -> String in
+        "Not Implemented"
+    }
+    
+    app.post("json", "settings", "engine", "ctxChangedScript") { req -> String in
+        "Not Implemented"
+    }
+    
+    app.post("json","settings","engine", "ignoredApps") { req -> String in
         app.logger.info("\(req.body)")
         
         let ignoreOp = try req.content.decode(IgnoredAppRequest.self)
@@ -258,6 +278,7 @@ func routes(_ app: Application) throws {
         return encode(ContextEngine.shared.ignoredBundleIDs)
     }
     
+    //
     app.get("json","engine","state") { req -> String in
         encode(ContextEngine.shared.state())
     }
@@ -274,7 +295,7 @@ func routes(_ app: Application) throws {
         return encode(ContextEngine.shared.state())
     }
     
-    //
+    // to determine the current app's context
     app.post("json","engine","state","probe") { req -> String in
         
         ContextEngine.shared.probeContext()
@@ -335,6 +356,8 @@ func routes(_ app: Application) throws {
         encode(Commands.ver.execute(""))
     }
     
+    // TODO mod to supp editing
+    // why is that a post?
     app.post("json", "scripts") { req -> String in
         struct ScriptRequest:Content {
             let appID:String
@@ -349,6 +372,7 @@ func routes(_ app: Application) throws {
         }
     }
     
+    // TODO make strat lut
     app.post("json", "strategies") { req -> String in
         struct StrategyRequest:Content {
             let appID:String
